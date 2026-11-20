@@ -25,7 +25,7 @@
             flex-direction: column;
             min-height: 100vh;
         }
-        h1 { margin-top: 0; font-size: 24px; display: flex; align-items: center; gap: 10px; }
+        h1 { margin-top: 6px; font-size: 24px; display: flex; align-items: center; gap: 10px; }
         .shop-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -40,50 +40,66 @@
             text-align: center;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            gap: 8px;
         }
-        .product-name { font-size: 14px; color: var(--text-main); margin-bottom: 8px; }
+        .product-name { font-size: 14px; color: var(--text-main); }
         .product-price { font-size: 16px; font-weight: bold; color: var(--accent); }
-        .old-price { text-decoration: line-through; color: var(--text-sec); font-size: 12px; margin-right: 5px; }
+        .old-price { text-decoration: line-through; color: var(--text-sec); font-size: 12px; }
         .badge-sale {
             background: var(--danger);
             color: white;
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 10px;
-            margin-bottom: 8px;
+            width: fit-content;
+            margin: 0 auto;
         }
         button {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             background: var(--accent);
             color: white;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            font-size: 14px;
         }
         button:active { background: var(--accent-hover); }
         .cart-summary {
             background: var(--card-bg);
             padding: 15px;
             border-radius: 12px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         .cart-items { max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
-        .cart-item { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
-        .cart-total { font-size: 18px; font-weight: bold; color: var(--accent); text-align: right; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 14px; gap: 8px; }
+        .cart-total { font-size: 18px; font-weight: bold; color: var(--accent); text-align: right; margin-bottom: 10px; }
+        .remove-btn {
+            width: auto;
+            padding: 2px 8px;
+            background: none;
+            color: var(--danger);
+            font-size: 12px;
+            font-weight: normal;
+        }
         .empty-state { text-align: center; color: var(--text-sec); margin-top: 50px; }
-        .spinner { text-align: center; color: var(--text-sec); }
+        .spinner { text-align: center; color: var(--text-sec); margin-top: 20px; }
+        .error-box {
+            background: #3a1a1a;
+            border: 1px solid var(--danger);
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 20px;
+            color: #ffb0b0;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
     <h1>🛍 Мой магазин</h1>
-    
     <div id="loading" class="spinner">Загрузка товаров...</div>
     <div id="products-container" class="shop-grid"></div>
-
     <div class="cart-summary">
         <div class="cart-items" id="cart-items"></div>
         <div class="cart-total">Итого: <span id="cart-total">0</span> ₽</div>
@@ -93,99 +109,78 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
-        
-        // Ссылка на твой products.json (ОБЯЗАТЕЛЬНО проверь, чтобы файл лежал в корне репо!)
-        const PRODUCTS_URL = 'https://ashhamahov59.github.io/rustam10/products.json';
-        
-        let products = ;
-        let cart = {}; // { key: qty }
+        tg.expand();
 
-        // --- ЛОГИКА СКИДОК (как в боте) ---
-        function calculatePrice(product, discounts) {
-            let price = product.price;
-            let discountPercent = 0;
+        let products = {};
+        let discounts = { global: 0, byCategory: {}, byItem: {} };
+        let cart = {}; // ключ товара -> количество
 
-            // 1. Скидка на конкретный товар (приоритет 1)
-            if (discounts.byItem && discounts.byItem[product.key]) {
-                discountPercent = discounts.byItem[product.key];
-            } 
-            // 2. Скидка на категорию (приоритет 2)
-            else if (discounts.byCategory && discounts.byCategory[product.category]) {
-                discountPercent = discounts.byCategory[product.category];
-            } 
-            // 3. Скидка на всё (приоритет 3)
-            else if (discounts.global) {
-                discountPercent = discounts.global;
+        function calculatePrice(p) {
+            let percent = 0;
+            if (discounts.byItem && discounts.byItem[p.key] !== undefined) {
+                percent = discounts.byItem[p.key];
+            } else if (discounts.byCategory && discounts.byCategory[p.category] !== undefined) {
+                percent = discounts.byCategory[p.category];
+            } else if (discounts.global) {
+                percent = discounts.global;
             }
-
-            if (discountPercent > 0) {
-                const finalPrice = Math.round(price * (1 - discountPercent / 100));
-                return { original: price, final: finalPrice, percent: discountPercent };
-            }
-            return { original: price, final: price, percent: 0 };
+            const final = Math.round(p.price * (1 - percent / 100));
+            return { final: final, percent: percent, original: p.price };
         }
 
-        // --- ЗАГРУЗКА ДАННЫХ ---
         async function loadData() {
             try {
-                const productsRes = await fetch(PRODUCTS_URL);
-                if (!productsRes.ok) throw new Error('Товары не найдены');
-                products = await productsRes.json();
+                const res = await fetch('./products.json');
+                if (!res.ok) throw new Error('products.json не найден на GitHub (код ' + res.status + ')');
+                products = await res.json();
 
-                // В будущем сюда можно добавить загрузку discounts.json, 
-                // но пока сделаем заглушку, чтобы работало сразу.
-                // Для полноценной работы нужно создать discounts.json на GitHub или отдавать из бота.
-                // Пока считаем, что скидок нет, если их нет в JSON.
-                const discounts = { byItem: {}, byCategory: {}, global: 0 }; 
-                
-                renderProducts(products, discounts);
-                updateCartUI();
+                // Скидки: если файла нет — считаем, что скидок нет, это не ошибка
+                try {
+                    const dRes = await fetch('./discounts.json');
+                    if (dRes.ok) discounts = await dRes.json();
+                } catch (e) { /* файла скидок нет — работаем без скидок */ }
+
                 document.getElementById('loading').style.display = 'none';
+                renderProducts();
             } catch (e) {
-                document.getElementById('loading').innerText = 'Ошибка загрузки: ' + e.message;
-                console.error(e);
+                const box = document.createElement('div');
+                box.className = 'error-box';
+                box.innerText = 'Ошибка: ' + e.message + '. Загрузи products.json в репозиторий (рядом с index.html).';
+                document.body.insertBefore(box, document.getElementById('products-container'));
+                document.getElementById('loading').innerText = 'Товары не загрузились';
             }
         }
 
-        // --- ОТРИСОВКА ТОВАРОВ ---
-        function renderProducts(items, discounts) {
+        function renderProducts() {
             const container = document.getElementById('products-container');
             container.innerHTML = '';
-
-            if (!items || Object.keys(items).length === 0) {
-                container.innerHTML = '<div class="empty-state">Товары пока не добавлены в админке</div>';
+            const keys = Object.keys(products);
+            if (keys.length === 0) {
+                container.innerHTML = '<div class="empty-state">Товаров пока нет — добавь их через админку бота</div>';
                 return;
             }
-
-            for (const key in items) {
-                const p = items[key];
-                p.key = key; // Сохраняем ключ
-                const calc = calculatePrice(p, discounts);
-
+            for (const key of keys) {
+                const p = products[key];
+                p.key = key;
+                const calc = calculatePrice(p);
                 const card = document.createElement('div');
                 card.className = 'product-card';
-                
                 let badge = '';
-                if (calc.percent > 0) {
-                    badge = `<div class="badge-sale">-\${calc.percent}%</div>`;
-                }
-
-                const oldPriceHtml = calc.percent > 0 ? `<span class="old-price">\${calc.original} ₽</span>` : '';
-
-                card.innerHTML = `
-                    \${badge}
-                    <div class="product-name">\${p.name}</div>
-                    <div class="product-price">
-                        \${calc.final} ₽
-                        \${oldPriceHtml}
-                    </div>
-                    <button onclick="addToCart('\${key}')">В корзину</button>
-                `;
+                if (calc.percent > 0) badge = '<div class="badge-sale">-' + calc.percent + '%</div>';
+                let oldPrice = '';
+                if (calc.percent > 0) oldPrice = '<span class="old-price">' + calc.original + ' ₽</span> ';
+                card.innerHTML =
+                    badge +
+                    '<div class="product-name">' + p.name + '</div>' +
+                    '<div class="product-price">' + oldPrice + calc.final + ' ₽</div>';
+                const btn = document.createElement('button');
+                btn.innerText = 'В корзину';
+                btn.onclick = function () { addToCart(key); };
+                card.appendChild(btn);
                 container.appendChild(card);
             }
         }
 
-        // --- КОРЗИНА ---
         function addToCart(key) {
             cart[key] = (cart[key] || 0) + 1;
             updateCartUI();
@@ -200,59 +195,46 @@
             const itemsEl = document.getElementById('cart-items');
             const totalEl = document.getElementById('cart-total');
             const btn = document.getElementById('checkout-btn');
-
             itemsEl.innerHTML = '';
             let total = 0;
-
+            let count = 0;
             for (const key in cart) {
                 const p = products[key];
                 if (!p) continue;
-                
-                // Пересчитываем цену со скидкой для корзины
-                const calc = calculatePrice(p, { byItem: {}, byCategory: {}, global: 0 }); // Тут нужна реальная логика скидок
-                
+                const calc = calculatePrice(p);
                 const itemTotal = calc.final * cart[key];
                 total += itemTotal;
-
-                const itemRow = document.createElement('div');
-                itemRow.className = 'cart-item';
-                itemRow.innerHTML = `
-                    <span>${p.name} × ${cart[key]}</span>
-                    <span style="color:var(--accent)">\${itemTotal} ₽</span>
-                    <button onclick="removeFromCart('\${key}')" style="padding:0 5px; background:none; color:var(--danger); font-size:12px;">✕</button>
-                `;
-                itemsEl.appendChild(itemRow);
+                count += cart[key];
+                const row = document.createElement('div');
+                row.className = 'cart-item';
+                const nameSpan = document.createElement('span');
+                nameSpan.innerText = p.name + ' × ' + cart[key];
+                const priceSpan = document.createElement('span');
+                priceSpan.style.color = 'var(--accent)';
+                priceSpan.innerText = itemTotal + ' ₽';
+                const delBtn = document.createElement('button');
+                delBtn.className = 'remove-btn';
+                delBtn.innerText = '✕';
+                delBtn.onclick = function () { removeFromCart(key); };
+                row.appendChild(nameSpan);
+                row.appendChild(priceSpan);
+                row.appendChild(delBtn);
+                itemsEl.appendChild(row);
             }
-
             totalEl.innerText = total;
-            btn.disabled = Object.keys(cart).length === 0;
+            btn.disabled = count === 0;
         }
 
-        // --- ОТПРАВКА ЗАКАЗА ---
-        document.getElementById('checkout-btn').addEventListener('click', () => {
+        document.getElementById('checkout-btn').addEventListener('click', function () {
             if (Object.keys(cart).length === 0) return;
-
-            const orderData = {
-                order: 
-            };
-
+            const order = [];
             for (const key in cart) {
                 const p = products[key];
-                if (p) {
-                    // Снова считаем цену со скидкой (упрощенно)
-                    const calc = calculatePrice(p, { byItem: {}, byCategory: {}, global: 0 });
-                    orderData.order.push({
-                        key: key,
-                        name: p.name,
-                        qty: cart[key],
-                        price: calc.final
-                    });
-                }
+                if (!p) continue;
+                const calc = calculatePrice(p);
+                order.push({ key: key, name: p.name, qty: cart[key], price: calc.final });
             }
-
-            const dataString = JSON.stringify(orderData);
-            tg.sendData(dataString);
-            // tg.close(); // Можно закрыть после отправки
+            tg.sendData(JSON.stringify({ order: order }));
         });
 
         loadData();
