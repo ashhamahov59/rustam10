@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Мой магазин</title>
+<title>Apex</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  body { font-family:-apple-system,'Segoe UI',Roboto,sans-serif; background:#121212; color:#fff; margin:0; padding:12px; padding-bottom:130px; }
+  body { font-family:-apple-system,'Segoe UI',Roboto,sans-serif; background:#121212; color:#fff; margin:0; padding:12px; padding-bottom:140px; }
   h1 { font-size:22px; margin:4px 0 14px; }
   .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px; }
   .card { background:#1e1e1e; border-radius:12px; padding:14px; text-align:center; display:flex; flex-direction:column; gap:8px; }
@@ -17,8 +17,8 @@
   button { padding:11px; border:none; border-radius:10px; background:#3390ec; color:#fff; font-weight:600; font-size:14px; cursor:pointer; }
   .bar { position:fixed; left:0; right:0; bottom:0; background:#1a1a1a; padding:12px; }
   .total { text-align:right; font-size:17px; font-weight:700; margin-bottom:8px; }
-  .cartline { display:flex; justify-content:space-between; font-size:14px; margin-bottom:4px; }
-  .del { background:none; color:#ff5252; padding:0 6px; font-size:13px; }
+  .cartline { display:flex; justify-content:space-between; align-items:center; gap:6px; font-size:14px; margin-bottom:4px; }
+  .del { background:none; color:#ff5252; padding:0 6px; font-size:13px; cursor:pointer; }
   .ok { display:none; background:#1d7a3e; color:#fff; padding:12px; border-radius:10px; text-align:center; margin-bottom:10px; }
   .err { display:none; background:#8b1d1d; color:#fff; padding:12px; border-radius:10px; text-align:center; margin-bottom:10px; }
   .empty { color:#888; text-align:center; padding:30px 0; }
@@ -26,7 +26,7 @@
 </style>
 </head>
 <body>
-<h1>🛍 Мой магазин</h1>
+<h1>🛍 Apex</h1>
 <div id="ok" class="ok">✅ Заказ отправлен! Окно закроется через 2 секунды.</div>
 <div id="err" class="err"></div>
 <div id="status" class="empty">Загрузка товаров...</div>
@@ -36,95 +36,149 @@
   <div class="total">Итого: <span id="total">0</span> ₽</div>
   <button id="checkout-btn" style="width:100%">Оформить заказ</button>
 </div>
-<div class="ver">версия страницы: v4 (исправлена корзина)</div>
+<div class="ver">версия страницы: v5</div>
 <script>
-const tg = window.Telegram.WebApp;
-tg.ready(); tg.expand();
-const BASE = location.href.replace(/[^/]*\$/, '');
-let products = {}, cart = {};
-let discounts = { byItem: {}, byCategory: {}, global: 0 };
+var tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
 
-function showErr(t) { const e = document.getElementById('err'); e.innerText = t; e.style.display = 'block'; setTimeout(() => e.style.display = 'none', 6000); }
+var products = {};
+var cart = {};
+var discounts = { byItem: {}, byCategory: {}, global: 0 };
+
+function showErr(t) {
+  var e = document.getElementById('err');
+  e.innerText = t;
+  e.style.display = 'block';
+  setTimeout(function () { e.style.display = 'none'; }, 6000);
+}
 
 function calcPrice(p) {
-  let pr = 0;
-  if (discounts.byItem && discounts.byItem[p.key]) pr = discounts.byItem[p.key];
-  else if (discounts.byCategory && discounts.byCategory[p.category]) pr = discounts.byCategory[p.category];
-  else if (discounts.global) pr = discounts.global;
+  var pr = 0;
+  if (discounts.byItem && discounts.byItem[p.key]) {
+    pr = discounts.byItem[p.key];
+  } else if (discounts.byCategory && discounts.byCategory[p.category]) {
+    pr = discounts.byCategory[p.category];
+  } else if (discounts.global) {
+    pr = discounts.global;
+  }
   return { final: Math.round(p.price * (1 - pr / 100)), percent: pr, original: p.price };
 }
 
-async function load() {
-  try {
-    const r = await fetch(BASE + 'products.json');
-    if (!r.ok) throw new Error('products.json не найден (код ' + r.status + ')');
-    products = await r.json();
-    try { const d = await fetch(BASE + 'discounts.json'); if (d.ok) discounts = await d.json(); } catch (e) {}
-    render();
-    document.getElementById('status').style.display = 'none';
-  } catch (e) { document.getElementById('status').innerText = '⚠ ' + e.message; }
+function load() {
+  fetch('products.json')
+    .then(function (r) {
+      if (!r.ok) throw new Error('products.json не найден (код ' + r.status + ')');
+      return r.json();
+    })
+    .then(function (data) {
+      products = data;
+      return fetch('discounts.json');
+    })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) { if (d) discounts = d; })
+    .then(function () {
+      render();
+      document.getElementById('status').style.display = 'none';
+    })
+    .catch(function (e) {
+      document.getElementById('status').innerText = '⚠ ' + e.message;
+    });
 }
 
 function render() {
-  const box = document.getElementById('products'); box.innerHTML = '';
-  const keys = Object.keys(products);
-  if (!keys.length) { document.getElementById('status').innerText = 'Товаров нет — добавь через админку бота'; document.getElementById('status').style.display = 'block'; return; }
-  for (const key of keys) {
-    const p = products[key]; p.key = key;
-    const c = calcPrice(p);
-    const card = document.createElement('div'); card.className = 'card';
-    let h = '';
+  var box = document.getElementById('products');
+  box.innerHTML = '';
+  var keys = Object.keys(products);
+  if (!keys.length) {
+    document.getElementById('status').innerText = 'Товаров нет — добавь через админку бота';
+    document.getElementById('status').style.display = 'block';
+    return;
+  }
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    var p = products[key];
+    p.key = key;
+    var c = calcPrice(p);
+    var card = document.createElement('div');
+    card.className = 'card';
+    var h = '';
     if (c.percent > 0) h += '<span class="badge">-' + c.percent + '%</span>';
     h += '<div class="name">' + p.name + '</div>';
     h += '<div class="price">' + (c.percent > 0 ? '<span class="old">' + c.original + ' ₽</span>' : '') + c.final + ' ₽</div>';
     card.innerHTML = h;
-    const b = document.createElement('button'); b.innerText = 'В корзину'; b.dataset.key = key;
-    card.appendChild(b); box.appendChild(card);
+    var b = document.createElement('button');
+    b.innerText = 'В корзину';
+    b.setAttribute('data-key', key);
+    card.appendChild(b);
+    box.appendChild(card);
   }
 }
 
 function drawCart() {
-  const lines = document.getElementById('cartlines'); lines.innerHTML = '';
-  let total = 0;
-  for (const key in cart) {
-    const p = products[key]; if (!p) continue;
-    const c = calcPrice(p); const sum = c.final * cart[key]; total += sum;
-    const row = document.createElement('div'); row.className = 'cartline';
-    const l = document.createElement('span'); l.innerText = p.name + ' × ' + cart[key];
-    const r = document.createElement('span'); r.innerText = sum + ' ₽';
-    const d = document.createElement('button'); d.className = 'del'; d.innerText = '✕';
-    d.addEventListener('click', () => { delete cart[key]; drawCart(); });
-    row.appendChild(l); row.appendChild(r); row.appendChild(d); lines.appendChild(row);
+  var lines = document.getElementById('cartlines');
+  lines.innerHTML = '';
+  var total = 0;
+  for (var key in cart) {
+    var p = products[key];
+    if (!p) continue;
+    var c = calcPrice(p);
+    var sum = c.final * cart[key];
+    total += sum;
+    var row = document.createElement('div');
+    row.className = 'cartline';
+    var l = document.createElement('span');
+    l.innerText = p.name + ' × ' + cart[key];
+    var r = document.createElement('span');
+    r.innerText = sum + ' ₽';
+    var d = document.createElement('button');
+    d.className = 'del';
+    d.innerText = '✕';
+    d.setAttribute('data-del', key);
+    row.appendChild(l);
+    row.appendChild(r);
+    row.appendChild(d);
+    lines.appendChild(row);
   }
   document.getElementById('total').innerText = total;
 }
 
-// Делегирование событий: ловим клики по всем кнопкам "В корзину"
-document.body.addEventListener('click', function(e) {
-  if (e.target.matches('button[data-key]')) {
-    const key = e.target.dataset.key;
+document.body.addEventListener('click', function (e) {
+  var t = e.target;
+  if (t.hasAttribute && t.hasAttribute('data-key')) {
+    var key = t.getAttribute('data-key');
     cart[key] = (cart[key] || 0) + 1;
+    drawCart();
+  }
+  if (t.hasAttribute && t.hasAttribute('data-del')) {
+    delete cart[t.getAttribute('data-del')];
     drawCart();
   }
 });
 
 document.getElementById('checkout-btn').addEventListener('click', function () {
   try {
-    const keys = Object.keys(cart);
-    if (!keys.length) { tg.showAlert('Корзина пуста! Сначала добавьте товар кнопкой "В корзину"'); return; }
+    var keys = Object.keys(cart);
+    if (!keys.length) {
+      tg.showAlert('Корзина пуста! Сначала добавьте товар кнопкой "В корзину"');
+      return;
+    }
     if (!tg.initDataUnsafe || !tg.initDataUnsafe.user) {
-      tg.showAlert('Открой магазин через кнопку в боте, а не в обычном браузере'); return;
+      tg.showAlert('Открой магазин через кнопку в боте, а не в обычном браузере');
+      return;
     }
-    const order = ;
-    for (const key of keys) {
-      const p = products[key]; if (!p) continue;
-      order.push({ key: key, name: p.name, qty: cart[key], price: calcPrice(p).final });
+    var order = [];
+    for (var i = 0; i < keys.length; i++) {
+      var p = products[keys[i]];
+      if (!p) continue;
+      order.push({ key: keys[i], name: p.name, qty: cart[keys[i]], price: calcPrice(p).final });
     }
-    console.log('Отправка заказа:', JSON.stringify({ order: order }));
     tg.sendData(JSON.stringify({ order: order }));
     document.getElementById('ok').style.display = 'block';
-    setTimeout(() => tg.close(), 2000);
-  } catch (e) { showErr('Ошибка оформления: ' + e.message); }
+    setTimeout(function () { tg.close(); }, 2000);
+  } catch (e) {
+    showErr('Ошибка оформления: ' + e.message);
+  }
 });
 
 load();
