@@ -6,320 +6,259 @@
 <title>Apex | Онлайн Магазин</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background: var(--tg-theme-bg-color, #17212b);
-    color: var(--tg-theme-text-color, #ffffff);
-    padding-bottom: 90px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif;
+    background: #0f0f14; color: #f2f2f7; padding-bottom: 96px;
   }
-  .container { padding: 12px; }
-  h1 { font-size: 22px; margin-bottom: 12px; }
-  .status-box { text-align: center; padding: 40px 10px; color: var(--tg-theme-hint-color, #8aa); }
-  .error-box { text-align: center; padding: 30px 10px; color: #ff6b6b; }
-
-  .cat-btn {
-    display: block; width: 100%; text-align: left;
-    background: var(--tg-theme-secondary-bg-color, #232e3c);
-    color: var(--tg-theme-text-color, #fff);
-    border: none; border-radius: 10px;
-    padding: 14px 16px; margin-bottom: 8px;
-    font-size: 16px; cursor: pointer;
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(15,15,20,.92); backdrop-filter: blur(12px);
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
   }
-  .product-card {
-    background: var(--tg-theme-secondary-bg-color, #232e3c);
-    border-radius: 12px; padding: 12px; margin-bottom: 10px;
+  header h1 { font-size: 22px; font-weight: 800; letter-spacing: .3px; }
+  header .sub { font-size: 12px; color: #8e8e93; margin-top: 2px; }
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 10px 16px 2px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex-shrink: 0; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    background: #1c1c24; color: #c7c7cc; border: 1px solid rgba(255,255,255,.08); cursor: pointer;
   }
-  .product-card h3 { font-size: 16px; margin-bottom: 4px; }
-  .product-card .desc { font-size: 13px; color: var(--tg-theme-hint-color, #8aa); margin-bottom: 6px; }
-  .price-line { font-size: 15px; margin-bottom: 10px; }
-  .price-line .old { text-decoration: line-through; opacity: 0.6; margin-right: 6px; }
-  .price-line .new { color: #4dd865; font-weight: bold; }
-  .add-btn {
-    background: var(--tg-theme-button-color, #2f9e44);
-    color: var(--tg-theme-button-text-color, #fff);
-    border: none; border-radius: 8px;
-    padding: 10px 14px; font-size: 15px; width: 100%; cursor: pointer;
+  .chip.active { background: #2f6bff; color: #fff; border-color: #2f6bff; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px 16px; }
+  .card {
+    background: #1c1c24; border-radius: 16px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,.06);
+    display: flex; flex-direction: column;
   }
-  .back-btn {
-    background: transparent; color: var(--tg-theme-hint-color, #8aa);
-    border: none; font-size: 15px; padding: 10px; margin-bottom: 8px; cursor: pointer;
+  .card .img { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #26262e; display: block; }
+  .card .body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .card .name { font-size: 14px; font-weight: 600; line-height: 1.25; }
+  .card .price { font-size: 15px; font-weight: 800; color: #fff; }
+  .card .price s { color: #8e8e93; font-weight: 500; font-size: 12px; margin-left: 4px; }
+  .card .price .off { color: #34c759; font-size: 12px; font-weight: 700; margin-left: 4px; }
+  .row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+  .qty { display: flex; align-items: center; gap: 8px; }
+  .qty button {
+    width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
+    background: #2c2c35; color: #fff; font-size: 17px; font-weight: 700; line-height: 1;
   }
-  .cart-item {
-    display: flex; justify-content: space-between; align-items: center;
-    background: var(--tg-theme-secondary-bg-color, #232e3c);
-    border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+  .qty button:active { background: #3a3a45; }
+  .qty span { min-width: 18px; text-align: center; font-weight: 700; font-size: 14px; }
+  .addbtn {
+    background: #2f6bff; color: #fff; border: none; border-radius: 10px;
+    padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer;
   }
-  .qty-controls { display: flex; align-items: center; gap: 8px; }
-  .qty-btn {
-    width: 28px; height: 28px; border-radius: 50%;
-    border: none; background: #2f6fed; color: #fff; font-size: 16px; cursor: pointer;
+  .addbtn:active { opacity: .8; }
+  .empty { text-align: center; color: #8e8e93; padding: 48px 24px; font-size: 15px; }
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: rgba(15,15,20,.95); backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,255,255,.08);
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
   }
-  .checkout-bar {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--tg-theme-bg-color, #17212b);
-    padding: 10px 14px 14px;
-    border-top: 1px solid rgba(255,255,255,0.08);
+  .bar .total { font-size: 17px; font-weight: 800; white-space: nowrap; }
+  .bar .total small { display: block; font-size: 11px; color: #8e8e93; font-weight: 500; }
+  #checkout {
+    flex: 1; background: #2f6bff; color: #fff; border: none; border-radius: 14px;
+    padding: 14px 10px; font-size: 16px; font-weight: 700; cursor: pointer;
   }
-  .total-line { text-align: right; font-size: 16px; margin-bottom: 8px; }
-  .checkout-btn {
-    width: 100%; padding: 14px; border: none; border-radius: 10px;
-    background: var(--tg-theme-button-color, #2f9e44);
-    color: var(--tg-theme-button-text-color, #fff);
-    font-size: 17px; cursor: pointer;
+  #checkout:disabled { background: #2c2c35; color: #6b6b74; }
+  #status {
+    position: fixed; left: 16px; right: 16px; bottom: 92px; z-index: 20;
+    background: #1c1c24; border: 1px solid rgba(255,255,255,.12); border-radius: 14px;
+    padding: 12px 14px; font-size: 14px; line-height: 1.4; display: none;
   }
-  .ver { text-align: center; color: var(--tg-theme-hint-color, #8aa); font-size: 11px; margin-top: 16px; }
+  #status.ok { border-color: #34c759; }
+  #status.err { border-color: #ff453a; }
+  #status button {
+    margin-top: 8px; background: #2c2c35; color: #fff; border: none; border-radius: 8px;
+    padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; margin-right: 8px;
+  }
 </style>
 </head>
 <body>
-<div class="container">
+<header>
   <h1>🛍 Apex</h1>
+  <div class="sub" id="sub">Загрузка товаров…</div>
+</header>
+<div class="chips" id="chips"></div>
+<div id="app"></div>
 
-  <div id="loading" class="status-box">Загрузка товаров...</div>
-  <div id="error" class="error-box" style="display:none;"></div>
+<div id="status"></div>
 
-  <div id="screen"></div>
+<div class="bar">
+  <div class="total"><span id="total">Итого: 0 ₽</span><small id="cnt">Корзина пуста</small></div>
+  <button id="checkout" disabled>Оформить заказ</button>
 </div>
-
-<div class="checkout-bar" id="checkout-bar" style="display:none;">
-  <div class="total-line">Итого: <span id="total">0</span> ₽</div>
-  <button class="checkout-btn" id="checkout-btn">Оформить заказ</button>
-</div>
-
-<div class="ver">версия страницы: v10</div>
 
 <script>
-var tg = window.Telegram.WebApp;
-tg.ready();
-tg.expand();
+const VER = "v11";
+const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+if (tg) { tg.ready(); tg.expand(); }
+console.log("HTML версия:", VER);
 
-var products = {};      // { key: {name, price, category, desc, photo} }
-var discounts = {};     // { byItem: {}, byCategory: {}, global: 0 }
-var cart = {};          // { key: qty }
-var currentCategory = null;
+let products = {};
+let discounts = { byItem: {}, byCategory: {}, global: 0 };
+let cart = {};      // key -> qty
+let currentCat = "all";
 
-var loadingEl = document.getElementById('loading');
-var errorEl = document.getElementById('error');
-var screenEl = document.getElementById('screen');
-var barEl = document.getElementById('checkout-bar');
-var totalEl = document.getElementById('total');
-var checkoutBtn = document.getElementById('checkout-btn');
+const esc = s => String(s == null ? "" : s)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
-// ---------- СКИДКИ ----------
+function discPercent(p) {
+  const i = (discounts.byItem && discounts.byItem[p.key]) || 0;
+  const c = (discounts.byCategory && discounts.byCategory[p.category]) || 0;
+  const g = discounts.global || 0;
+  return i || c || g;
+}
+function priceOf(p) { return Math.round(p.price * (1 - discPercent(p) / 100)); }
+function rub(n) { return n.toLocaleString("ru-RU") + " ₽"; }
 
-function discountPercentFor(key) {
-  var p = products[key];
-  if (!p) return 0;
-  var byItem = (discounts.byItem || {})[key] || 0;
-  var byCat = (discounts.byCategory || {})[p.category] || 0;
-  var g = discounts.global || 0;
-  return byItem || byCat || g || 0;
+async function load() {
+  const bust = "?cache=" + Date.now();
+  try {
+    products = await (await fetch("products.json" + bust)).json();
+  } catch (e) {
+    document.getElementById("sub").textContent = "Не удалось загрузить товары";
+    document.getElementById("app").innerHTML =
+      '<div class="empty">Нет связи с базой товаров 😕<br>Открой магазин заново через кнопку в чате.</div>';
+    return;
+  }
+  try {
+    const d = await (await fetch("discounts.json" + bust)).json();
+    discounts = { byItem: d.byItem || {}, byCategory: d.byCategory || {}, global: d.global || 0 };
+  } catch (e) {}
+  Object.keys(products).forEach(k => products[k].key = k);
+  const count = Object.keys(products).length;
+  document.getElementById("sub").textContent =
+    "Товаров в наличии: " + count + " · версия " + VER;
+  render();
 }
 
-function priceFor(key) {
-  var p = products[key];
-  var percent = discountPercentFor(key);
+function render() {
+  // Категории
+  const cats = [...new Set(Object.values(products).map(p => p.category))].sort();
+  const chips = ["all", ...cats];
+  document.getElementById("chips").innerHTML = chips.map(c =>
+    `<div class="chip ${c === currentCat ? "active" : ""}" data-cat="${esc(c)}">${c === "all" ? "📦 Все" : esc(c)}</div>`
+  ).join("");
+  document.querySelectorAll(".chip").forEach(el =>
+    el.onclick = () => { currentCat = el.dataset.cat; render(); });
+
+  // Товары
+  const list = Object.values(products)
+    .filter(p => currentCat === "all" || p.category === currentCat);
+
+  const app = document.getElementById("app");
+  if (!list.length) { app.innerHTML = '<div class="empty">В этой категории пока пусто 🙂</div>'; return; }
+
+  app.innerHTML = '<div class="grid">' + list.map(p => {
+    const off = discPercent(p);
+    const fin = priceOf(p);
+    const q = cart[p.key] || 0;
+    const photo = p.photo ? ("photos/" + p.photo) : "";
+    return `<div class="card">
+      ${photo ? `<img class="img" src="${esc(photo)}" alt="">` : `<div class="img"></div>`}
+      <div class="body">
+        <div class="name">${esc(p.name)}</div>
+        <div class="price">${rub(fin)}${off ? `<s>${rub(p.price)}</s><span class="off">−${off}%</span>` : ""}</div>
+        <div class="row">
+          ${q ? `<div class="qty">
+              <button data-minus="${esc(p.key)}">−</button>
+              <span>${q}</span>
+              <button data-plus="${esc(p.key)}">+</button>
+            </div>` : `<button class="addbtn" data-plus="${esc(p.key)}">В корзину</button>`}
+        </div>
+      </div>
+    </div>`;
+  }).join("") + "</div>";
+
+  document.querySelectorAll("[data-plus]").forEach(b =>
+    b.onclick = () => change(b.dataset.plus, +1));
+  document.querySelectorAll("[data-minus]").forEach(b =>
+    b.onclick = () => change(b.dataset.minus, -1));
+}
+
+function change(key, d) {
+  cart[key] = Math.max(0, (cart[key] || 0) + d);
+  if (!cart[key]) delete cart[key];
+  if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+  render();
+  updateBar();
+}
+
+function updateBar() {
+  let total = 0, cnt = 0;
+  Object.entries(cart).forEach(([k, q]) => {
+    const p = products[k];
+    if (p) { total += priceOf(p) * q; cnt += q; }
+  });
+  document.getElementById("total").textContent = "Итого: " + rub(total);
+  document.getElementById("cnt").textContent = cnt ? ("Товаров: " + cnt) : "Корзина пуста";
+  document.getElementById("checkout").disabled = !cnt;
+}
+
+function showStatus(html, cls) {
+  const st = document.getElementById("status");
+  st.className = cls || "";
+  st.innerHTML = html;
+  st.style.display = "block";
+}
+function hideStatus() { document.getElementById("status").style.display = "none"; }
+
+function orderPayload() {
   return {
-    percent: percent,
-    final: Math.round(p.price * (1 - percent / 100)),
-    original: p.price
+    order: Object.entries(cart)
+      .filter(([k]) => products[k])
+      .map(([k, q]) => ({ key: k, qty: q }))
   };
 }
-
-// ---------- ЗАГРУЗКА ДАННЫХ (кэш отключён меткой времени) ----------
-
-function load() {
-  fetch('products.json?t=' + Date.now())
-    .then(function (r) {
-      if (!r.ok) throw new Error('products.json не найден (код ' + r.status + ')');
-      return r.json();
-    })
-    .then(function (data) {
-      products = data;
-      return fetch('discounts.json?t=' + Date.now());
-    })
-    .then(function (r) { return r.ok ? r.json() : null; })
-    .then(function (d) { if (d) discounts = d; })
-    .then(function () {
-      loadingEl.style.display = 'none';
-      showCategories();
-      updateCartBar();
-    })
-    .catch(function (e) {
-      loadingEl.style.display = 'none';
-      errorEl.style.display = 'block';
-      errorEl.textContent = 'Не удалось загрузить каталог: ' + e.message;
-    });
+function orderText() {
+  const lines = Object.entries(cart).filter(([k]) => products[k])
+    .map(([k, q]) => `• ${products[k].name} × ${q} — ${rub(priceOf(products[k]) * q)}`);
+  const total = Object.entries(cart).filter(([k]) => products[k])
+    .reduce((s, [k, q]) => s + priceOf(products[k]) * q, 0);
+  return "🛍 Заказ из Mini App:\n" + lines.join("\n") + "\nИтого: " + rub(total);
 }
 
-// ---------- ЭКРАН: КАТЕГОРИИ ----------
+document.getElementById("checkout").onclick = function () {
+  hideStatus();
+  if (!Object.keys(cart).length) return;
+  const payload = JSON.stringify(orderPayload());
 
-function showCategories() {
-  currentCategory = null;
-  screenEl.innerHTML = '';
-  var cats = {};
-  for (var key in products) cats[products[key].category] = true;
-
-  var html = '';
-  for (var c in cats) {
-    html += '<button class="cat-btn" onclick="openCategory(this.dataset.c)" data-c="' + esc(c) + '">' + esc(c) + '</button>';
-  }
-  html += '<button class="cat-btn" onclick="openCategory(\'all\')">📦 Все товары</button>';
-  screenEl.innerHTML = html;
-}
-
-// ---------- ЭКРАН: СПИСОК ТОВАРОВ КАТЕГОРИИ ----------
-
-function openCategory(cat) {
-  currentCategory = cat;
-  screenEl.innerHTML = '';
-  var title = cat === 'all' ? '📦 Все товары' : '📁 ' + cat;
-
-  var html = '<button class="back-btn" onclick="showCategories()">⬅️ Категории</button>';
-  html += '<h2 style="font-size:18px;margin-bottom:10px;">' + esc(title) + '</h2>';
-
-  var count = 0;
-  for (var key in products) {
-    var p = products[key];
-    if (cat !== 'all' && p.category !== cat) continue;
-    count++;
-    var pr = priceFor(key);
-    var priceHtml;
-    if (pr.percent > 0) {
-      priceHtml = '<span class="old">' + pr.original + ' ₽</span>' +
-                  '<span class="new">' + pr.final + ' ₽</span>' +
-                  ' <small>(-' + pr.percent + '%)</small>';
-    } else {
-      priceHtml = '<span class="new">' + pr.original + ' ₽</span>';
+  if (tg && typeof tg.sendData === "function") {
+    try {
+      tg.sendData(payload);
+      showStatus("✅ Заказ отправлен! Можешь закрыть это окно — я получу его и свяжусь с тобой.", "ok");
+      cart = {}; render(); updateBar();
+      setTimeout(() => { if (tg) tg.close(); }, 1500);
+      return;
+    } catch (e) {
+      showStatus("⚠️ Не удалось отправить: " + esc(e.message || e), "err");
+      return;
     }
-    html +=
-      '<div class="product-card">' +
-        '<h3>' + esc(p.name) + '</h3>' +
-        (p.desc ? '<div class="desc">' + esc(p.desc) + '</div>' : '') +
-        '<div class="price-line">' + priceHtml + '</div>' +
-        '<button class="add-btn" onclick="addToCart(this.dataset.k)" data-k="' + esc(key) + '">🛒 В корзину</button>' +
-      '</div>';
   }
-
-  if (!count) html += '<div class="status-box">Товаров пока нет</div>';
-  screenEl.innerHTML = html;
-  window.scrollTo(0, 0);
-}
-
-// ---------- КОРЗИНА ----------
-
-function addToCart(key) {
-  cart[key] = (cart[key] || 0) + 1;
-  updateCartBar();
-}
-
-function changeQty(key, delta) {
-  if (!cart[key]) return;
-  cart[key] += delta;
-  if (cart[key] <= 0) delete cart[key];
-  showCart();
-  updateCartBar();
-}
-
-function cartCount() {
-  var n = 0;
-  for (var k in cart) n += cart[k];
-  return n;
-}
-
-function cartTotal() {
-  var t = 0;
-  for (var k in cart) t += priceFor(k).final * cart[k];
-  return t;
-}
-
-function updateCartBar() {
-  var n = cartCount();
-  if (n > 0) {
-    barEl.style.display = 'block';
-    totalEl.textContent = cartTotal();
-    checkoutBtn.textContent = 'Оформить заказ (' + n + ')';
-  } else {
-    barEl.style.display = 'none';
-  }
-}
-
-function showCart() {
-  screenEl.innerHTML = '';
-  var html = '<button class="back-btn" onclick="goBack()">⬅️ Назад</button>';
-  html += '<h2 style="font-size:18px;margin-bottom:10px;">🛒 Корзина</h2>';
-
-  var any = false;
-  for (var key in cart) {
-    any = true;
-    var p = products[key];
-    if (!p) continue;
-    var pr = priceFor(key);
-    html +=
-      '<div class="cart-item">' +
-        '<div>' + esc(p.name) + '<br><small>' + pr.final + ' ₽ × ' + cart[key] + ' = ' + (pr.final * cart[key]) + ' ₽</small></div>' +
-        '<div class="qty-controls">' +
-          '<button class="qty-btn" onclick="changeQty(this.dataset.k,-1)" data-k="' + esc(key) + '">−</button>' +
-          '<span>' + cart[key] + '</span>' +
-          '<button class="qty-btn" onclick="changeQty(this.dataset.k,1)" data-k="' + esc(key) + '">+</button>' +
-        '</div>' +
-      '</div>';
-  }
-
-  if (!any) html += '<div class="status-box">Корзина пуста 🙂</div>';
-  screenEl.innerHTML = html;
-}
-
-function goBack() {
-  if (currentCategory) openCategory(currentCategory);
-  else showCategories();
-}
-
-// ---------- ОФОРМЛЕНИЕ ЗАКАЗА ----------
-
-checkoutBtn.onclick = function () {
-  var n = cartCount();
-  if (!n) return;
-
-  var order = [];
-  for (var key in cart) {
-    order.push({ key: key, qty: cart[key] });
-  }
-
-  // Отправляем заказ боту через web_app_data.
-  // shop.py сам пересчитает цены по скидкам и сохранит заказ.
-  tg.sendData(JSON.stringify({ order: order }));
-
-  checkoutBtn.textContent = '✅ Заказ отправлен!';
-  cart = {};
-  updateCartBar();
-  setTimeout(function () { tg.close(); }, 2000);
+  // sendData недоступен (магазин открыт не через кнопку в чате, либо клиент без поддержки)
+  showStatus(
+    "⚠️ Этот клиент не может отправить заказ напрямую.<br><br>" +
+    "<b>Как исправить:</b> закрой это окно и открой магазин через кнопку «🛍 Открыть магазин» " +
+    "в самом чате с ботом (широкая кнопка внизу под сообщением).<br><br>" +
+    "Или отправь заказ вручную:",
+    "err");
+  const btnCopy = document.createElement("button");
+  btnCopy.textContent = "Скопировать заказ";
+  btnCopy.onclick = () => {
+    navigator.clipboard.writeText(orderText()).then(
+      () => { btnCopy.textContent = "Скопировано ✓"; },
+      () => { btnCopy.textContent = "Не вышло 😕"; }
+    );
+  };
+  document.getElementById("status").appendChild(btnCopy);
 };
-
-// ---------- ЭКРАН: КОРЗИНА ПО КНОПКЕ БЕЗ ПОТЕРИ КАТЕГОРИИ ----------
-
-// Перехватываем стандартное поведение: если пользователь открыл корзину,
-// кнопка "назад" вернёт его в категорию, где он был.
-
-// ---------- УТИЛИТЫ ----------
-
-function esc(s) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-// перехват кликов по кнопке корзины в нижней панели — если пользователь
-// кликнул по ней, но корзина пуста, ничего не делаем
-barEl.addEventListener('click', function (e) {
-  if (e.target === checkoutBtn) return;
-});
-
-// При переходе на экран корзины по клику на нижнюю панель
-totalEl.onclick = showCart;
 
 load();
 </script>
