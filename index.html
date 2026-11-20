@@ -36,11 +36,11 @@
   <div class="total">Итого: <span id="total">0</span> ₽</div>
   <button id="checkout-btn" style="width:100%">Оформить заказ</button>
 </div>
-<div class="ver">версия страницы: v3</div>
+<div class="ver">версия страницы: v4 (исправлена корзина)</div>
 <script>
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
-const BASE = location.href.replace(/[^/]*$/, '');
+const BASE = location.href.replace(/[^/]*\$/, '');
 let products = {}, cart = {};
 let discounts = { byItem: {}, byCategory: {}, global: 0 };
 
@@ -78,8 +78,7 @@ function render() {
     h += '<div class="name">' + p.name + '</div>';
     h += '<div class="price">' + (c.percent > 0 ? '<span class="old">' + c.original + ' ₽</span>' : '') + c.final + ' ₽</div>';
     card.innerHTML = h;
-    const b = document.createElement('button'); b.innerText = 'В корзину';
-    b.addEventListener('click', () => { cart[key] = (cart[key] || 0) + 1; drawCart(); });
+    const b = document.createElement('button'); b.innerText = 'В корзину'; b.dataset.key = key;
     card.appendChild(b); box.appendChild(card);
   }
 }
@@ -100,18 +99,28 @@ function drawCart() {
   document.getElementById('total').innerText = total;
 }
 
+// Делегирование событий: ловим клики по всем кнопкам "В корзину"
+document.body.addEventListener('click', function(e) {
+  if (e.target.matches('button[data-key]')) {
+    const key = e.target.dataset.key;
+    cart[key] = (cart[key] || 0) + 1;
+    drawCart();
+  }
+});
+
 document.getElementById('checkout-btn').addEventListener('click', function () {
   try {
     const keys = Object.keys(cart);
-    if (!keys.length) { tg.showAlert('Корзина пуста'); return; }
+    if (!keys.length) { tg.showAlert('Корзина пуста! Сначала добавьте товар кнопкой "В корзину"'); return; }
     if (!tg.initDataUnsafe || !tg.initDataUnsafe.user) {
       tg.showAlert('Открой магазин через кнопку в боте, а не в обычном браузере'); return;
     }
-    const order = [];
+    const order = ;
     for (const key of keys) {
       const p = products[key]; if (!p) continue;
       order.push({ key: key, name: p.name, qty: cart[key], price: calcPrice(p).final });
     }
+    console.log('Отправка заказа:', JSON.stringify({ order: order }));
     tg.sendData(JSON.stringify({ order: order }));
     document.getElementById('ok').style.display = 'block';
     setTimeout(() => tg.close(), 2000);
