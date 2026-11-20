@@ -14,6 +14,7 @@
             --accent: #3390ec;
             --accent-hover: #2a78c2;
             --danger: #ff5252;
+            --ok: #4caf50;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -23,9 +24,9 @@
             padding: 10px;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            min-height: 96vh;
         }
-        h1 { margin-top: 6px; font-size: 24px; display: flex; align-items: center; gap: 10px; }
+        h1 { margin-top: 6px; margin-bottom: 12px; font-size: 24px; display: flex; align-items: center; gap: 10px; }
         .shop-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -40,143 +41,184 @@
             text-align: center;
             display: flex;
             flex-direction: column;
+            justify-content: flex-start;
             gap: 8px;
         }
-        .product-name { font-size: 14px; color: var(--text-main); }
+        .product-name { font-size: 14px; color: var(--text-main); margin-bottom: 4px; }
         .product-price { font-size: 16px; font-weight: bold; color: var(--accent); }
-        .old-price { text-decoration: line-through; color: var(--text-sec); font-size: 12px; }
+        .old-price { text-decoration: line-through; color: var(--text-sec); font-size: 12px; margin-right: 5px; }
         .badge-sale {
             background: var(--danger);
             color: white;
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 10px;
-            width: fit-content;
-            margin: 0 auto;
+            display: inline-block;
         }
         button {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             background: var(--accent);
             color: white;
             font-weight: 600;
             cursor: pointer;
-            font-size: 14px;
+            transition: background 0.2s;
+            font-size: 15px;
         }
         button:active { background: var(--accent-hover); }
+        button:disabled { opacity: 0.5; cursor: default; }
         .cart-summary {
             background: var(--card-bg);
             padding: 15px;
             border-radius: 12px;
+            margin-top: auto;
+        }
+        .cart-items { max-height: 220px; overflow-y: auto; margin-bottom: 10px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 14px; gap: 8px; }
+        .cart-item .price { color: var(--accent); }
+        .cart-total { font-size: 18px; font-weight: bold; color: var(--accent); text-align: right; margin-bottom: 10px; }
+        .empty-state { text-align: center; color: var(--text-sec); margin-top: 50px; }
+        .spinner { text-align: center; color: var(--text-sec); }
+        .error-box {
+            background: #3a1e1e;
+            border: 1px solid var(--danger);
+            color: #ffb0b0;
+            padding: 12px;
+            border-radius: 10px;
             margin-bottom: 10px;
         }
-        .cart-items { max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 14px; gap: 8px; }
-        .cart-total { font-size: 18px; font-weight: bold; color: var(--accent); text-align: right; margin-bottom: 10px; }
+        .ok-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 14px;
+            text-align: center;
+            padding: 20px;
+        }
+        .ok-overlay.visible { display: flex; }
+        .ok-icon { font-size: 52px; }
+        .ok-text { font-size: 18px; font-weight: 600; }
+        .ok-sub { color: var(--text-sec); font-size: 14px; }
         .remove-btn {
-            width: auto;
-            padding: 2px 8px;
             background: none;
             color: var(--danger);
-            font-size: 12px;
-            font-weight: normal;
-        }
-        .empty-state { text-align: center; color: var(--text-sec); margin-top: 50px; }
-        .spinner { text-align: center; color: var(--text-sec); margin-top: 20px; }
-        .error-box {
-            background: #3a1a1a;
-            border: 1px solid var(--danger);
-            border-radius: 10px;
-            padding: 12px;
-            margin-top: 20px;
-            color: #ffb0b0;
-            font-size: 14px;
+            font-size: 16px;
+            width: auto;
+            padding: 0 6px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <h1>🛍 Мой магазин</h1>
+
+    <div id="error-box" class="error-box" style="display:none"></div>
     <div id="loading" class="spinner">Загрузка товаров...</div>
     <div id="products-container" class="shop-grid"></div>
+
     <div class="cart-summary">
         <div class="cart-items" id="cart-items"></div>
         <div class="cart-total">Итого: <span id="cart-total">0</span> ₽</div>
         <button id="checkout-btn" disabled>Оформить заказ</button>
     </div>
 
+    <div class="ok-overlay" id="ok-overlay">
+        <div class="ok-icon">✅</div>
+        <div class="ok-text">Заказ отправлен!</div>
+        <div class="ok-sub">Приложение закроется через пару секунд.<br>Ответ бота появится в чате.</div>
+    </div>
+
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
-        tg.expand();
+        try { tg.expand(); } catch (e) {}
 
         let products = {};
-        let discounts = { global: 0, byCategory: {}, byItem: {} };
-        let cart = {}; // ключ товара -> количество
+        let discounts = { byItem: {}, byCategory: {}, global: 0 };
+        let cart = {};
 
-        function calculatePrice(p) {
+        function showError(msg) {
+            const box = document.getElementById('error-box');
+            box.innerText = msg;
+            box.style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function calculatePrice(product) {
             let percent = 0;
-            if (discounts.byItem && discounts.byItem[p.key] !== undefined) {
-                percent = discounts.byItem[p.key];
-            } else if (discounts.byCategory && discounts.byCategory[p.category] !== undefined) {
-                percent = discounts.byCategory[p.category];
+            if (discounts.byItem && discounts.byItem[product.key]) {
+                percent = discounts.byItem[product.key];
+            } else if (discounts.byCategory && discounts.byCategory[product.category]) {
+                percent = discounts.byCategory[product.category];
             } else if (discounts.global) {
                 percent = discounts.global;
             }
-            const final = Math.round(p.price * (1 - percent / 100));
-            return { final: final, percent: percent, original: p.price };
+            const finalPrice = Math.round(product.price * (1 - percent / 100));
+            return { original: product.price, final: finalPrice, percent: percent };
         }
 
         async function loadData() {
             try {
-                const res = await fetch('./products.json');
-                if (!res.ok) throw new Error('products.json не найден на GitHub (код ' + res.status + ')');
-                products = await res.json();
+                const productsRes = await fetch('products.json', { cache: 'no-store' });
+                if (!productsRes.ok) throw new Error('products.json не найден (код ' + productsRes.status + ')');
+                products = await productsRes.json();
 
-                // Скидки: если файла нет — считаем, что скидок нет, это не ошибка
                 try {
-                    const dRes = await fetch('./discounts.json');
-                    if (dRes.ok) discounts = await dRes.json();
-                } catch (e) { /* файла скидок нет — работаем без скидок */ }
+                    const discRes = await fetch('discounts.json', { cache: 'no-store' });
+                    if (discRes.ok) discounts = await discRes.json();
+                } catch (e) { /* скидок нет — не страшно */ }
 
                 document.getElementById('loading').style.display = 'none';
                 renderProducts();
+                updateCartUI();
             } catch (e) {
-                const box = document.createElement('div');
-                box.className = 'error-box';
-                box.innerText = 'Ошибка: ' + e.message + '. Загрузи products.json в репозиторий (рядом с index.html).';
-                document.body.insertBefore(box, document.getElementById('products-container'));
-                document.getElementById('loading').innerText = 'Товары не загрузились';
+                showError('Ошибка загрузки: ' + e.message);
             }
         }
 
         function renderProducts() {
             const container = document.getElementById('products-container');
             container.innerHTML = '';
+
             const keys = Object.keys(products);
             if (keys.length === 0) {
-                container.innerHTML = '<div class="empty-state">Товаров пока нет — добавь их через админку бота</div>';
+                container.innerHTML = '<div class="empty-state">Товары пока не добавлены</div>';
                 return;
             }
+
             for (const key of keys) {
                 const p = products[key];
                 p.key = key;
                 const calc = calculatePrice(p);
+
                 const card = document.createElement('div');
                 card.className = 'product-card';
-                let badge = '';
-                if (calc.percent > 0) badge = '<div class="badge-sale">-' + calc.percent + '%</div>';
-                let oldPrice = '';
-                if (calc.percent > 0) oldPrice = '<span class="old-price">' + calc.original + ' ₽</span> ';
+
+                const badge = calc.percent > 0
+                    ? '<div class="badge-sale">-' + calc.percent + '%</div>'
+                    : '';
+                const oldPrice = calc.percent > 0
+                    ? '<span class="old-price">' + calc.original + ' ₽</span>'
+                    : '';
+
                 card.innerHTML =
                     badge +
-                    '<div class="product-name">' + p.name + '</div>' +
-                    '<div class="product-price">' + oldPrice + calc.final + ' ₽</div>';
-                const btn = document.createElement('button');
-                btn.innerText = 'В корзину';
-                btn.onclick = function () { addToCart(key); };
-                card.appendChild(btn);
+                    '<div class="product-name"></div>' +
+                    '<div class="product-price">' + calc.final + ' ₽<br>' + oldPrice + '</div>' +
+                    '<button data-key="' + key + '">В корзину</button>';
+
+                card.querySelector('.product-name').textContent = p.name;
+                card.querySelector('button').addEventListener('click', function () {
+                    addToCart(this.dataset.key);
+                });
+
                 container.appendChild(card);
             }
         }
@@ -195,46 +237,70 @@
             const itemsEl = document.getElementById('cart-items');
             const totalEl = document.getElementById('cart-total');
             const btn = document.getElementById('checkout-btn');
+
             itemsEl.innerHTML = '';
             let total = 0;
-            let count = 0;
+
             for (const key in cart) {
                 const p = products[key];
                 if (!p) continue;
                 const calc = calculatePrice(p);
                 const itemTotal = calc.final * cart[key];
                 total += itemTotal;
-                count += cart[key];
+
                 const row = document.createElement('div');
                 row.className = 'cart-item';
+
                 const nameSpan = document.createElement('span');
-                nameSpan.innerText = p.name + ' × ' + cart[key];
+                nameSpan.textContent = p.name + ' × ' + cart[key];
+
                 const priceSpan = document.createElement('span');
-                priceSpan.style.color = 'var(--accent)';
-                priceSpan.innerText = itemTotal + ' ₽';
+                priceSpan.className = 'price';
+                priceSpan.textContent = itemTotal + ' ₽';
+
                 const delBtn = document.createElement('button');
                 delBtn.className = 'remove-btn';
-                delBtn.innerText = '✕';
-                delBtn.onclick = function () { removeFromCart(key); };
+                delBtn.textContent = '✕';
+                delBtn.addEventListener('click', function () { removeFromCart(key); });
+
                 row.appendChild(nameSpan);
                 row.appendChild(priceSpan);
                 row.appendChild(delBtn);
                 itemsEl.appendChild(row);
             }
-            totalEl.innerText = total;
-            btn.disabled = count === 0;
+
+            totalEl.textContent = total;
+            btn.disabled = Object.keys(cart).length === 0;
         }
 
-        document.getElementById('checkout-btn').addEventListener('click', function () {
-            if (Object.keys(cart).length === 0) return;
-            const order = [];
-            for (const key in cart) {
-                const p = products[key];
-                if (!p) continue;
-                const calc = calculatePrice(p);
-                order.push({ key: key, name: p.name, qty: cart[key], price: calc.final });
+        document.getElementById('checkout-btn').addEventListener('click', () => {
+            const keys = Object.keys(cart);
+            if (keys.length === 0) return;
+
+            try {
+                const order = [];
+                for (const key of keys) {
+                    const p = products[key];
+                    if (!p) continue;
+                    const calc = calculatePrice(p);
+                    order.push({
+                        key: key,
+                        name: p.name,
+                        qty: cart[key],
+                        price: calc.final
+                    });
+                }
+
+                tg.sendData(JSON.stringify({ order: order }));
+
+                // Показываем подтверждение и закрываем приложение
+                document.getElementById('ok-overlay').classList.add('visible');
+                setTimeout(function () {
+                    try { tg.close(); } catch (e) {}
+                }, 2000);
+            } catch (e) {
+                showError('Не удалось отправить заказ: ' + e.message);
             }
-            tg.sendData(JSON.stringify({ order: order }));
         });
 
         loadData();
