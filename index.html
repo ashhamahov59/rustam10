@@ -1,42 +1,261 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body { font-family: sans-serif; background: var(--tg-theme-bg-color, #fff);
-           color: var(--tg-theme-text-color, #000); padding: 16px; }
-    button { padding: 12px; width: 100%; margin: 6px 0; border: none;
-             border-radius: 10px; background: #3390ec; color: #fff; font-size: 16px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Мой магазин</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #ffffff;
+            --text-sec: #aaaaaa;
+            --accent: #3390ec;
+            --accent-hover: #2a78c2;
+            --danger: #ff5252;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        h1 { margin-top: 0; font-size: 24px; display: flex; align-items: center; gap: 10px; }
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+        .product-card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .product-name { font-size: 14px; color: var(--text-main); margin-bottom: 8px; }
+        .product-price { font-size: 16px; font-weight: bold; color: var(--accent); }
+        .old-price { text-decoration: line-through; color: var(--text-sec); font-size: 12px; margin-right: 5px; }
+        .badge-sale {
+            background: var(--danger);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            margin-bottom: 8px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: var(--accent);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:active { background: var(--accent-hover); }
+        .cart-summary {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        .cart-items { max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
+        .cart-item { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
+        .cart-total { font-size: 18px; font-weight: bold; color: var(--accent); text-align: right; }
+        .empty-state { text-align: center; color: var(--text-sec); margin-top: 50px; }
+        .spinner { text-align: center; color: var(--text-sec); }
+    </style>
 </head>
 <body>
-  <h2>🛍 Мой магазин</h2>
-  <div id="goods"></div>
-  <button onclick="sendData()">Оформить заказ</button>
+    <h1>🛍 Мой магазин</h1>
+    
+    <div id="loading" class="spinner">Загрузка товаров...</div>
+    <div id="products-container" class="shop-grid"></div>
 
-  <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand(); // развернуть на весь экран
+    <div class="cart-summary">
+        <div class="cart-items" id="cart-items"></div>
+        <div class="cart-total">Итого: <span id="cart-total">0</span> ₽</div>
+        <button id="checkout-btn" disabled>Оформить заказ</button>
+    </div>
 
-    // Пока тестовые товары — потом будут приходить с сервера
-    const goods = [
-      {name: "AirPods Pro 2", price: 3500},
-      {name: "Apple Watch S9", price: 4200},
-    ];
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        
+        // Ссылка на твой products.json (ОБЯЗАТЕЛЬНО проверь, чтобы файл лежал в корне репо!)
+        const PRODUCTS_URL = 'https://ashhamahov59.github.io/rustam10/products.json';
+        
+        let products = ;
+        let cart = {}; // { key: qty }
 
-    const box = document.getElementById("goods");
-    goods.forEach(g => {
-      const b = document.createElement("button");
-      b.textContent = `${g.name} — ${g.price} ₽`;
-      b.onclick = () => tg.HapticFeedback.impactOccurred("light");
-      box.appendChild(b);
-    });
+        // --- ЛОГИКА СКИДОК (как в боте) ---
+        function calculatePrice(product, discounts) {
+            let price = product.price;
+            let discountPercent = 0;
 
-    function sendData() {
-      tg.sendData(JSON.stringify({order: goods.map(g => g.name)}));
-      tg.close();
-    }
-  </script>
+            // 1. Скидка на конкретный товар (приоритет 1)
+            if (discounts.byItem && discounts.byItem[product.key]) {
+                discountPercent = discounts.byItem[product.key];
+            } 
+            // 2. Скидка на категорию (приоритет 2)
+            else if (discounts.byCategory && discounts.byCategory[product.category]) {
+                discountPercent = discounts.byCategory[product.category];
+            } 
+            // 3. Скидка на всё (приоритет 3)
+            else if (discounts.global) {
+                discountPercent = discounts.global;
+            }
+
+            if (discountPercent > 0) {
+                const finalPrice = Math.round(price * (1 - discountPercent / 100));
+                return { original: price, final: finalPrice, percent: discountPercent };
+            }
+            return { original: price, final: price, percent: 0 };
+        }
+
+        // --- ЗАГРУЗКА ДАННЫХ ---
+        async function loadData() {
+            try {
+                const productsRes = await fetch(PRODUCTS_URL);
+                if (!productsRes.ok) throw new Error('Товары не найдены');
+                products = await productsRes.json();
+
+                // В будущем сюда можно добавить загрузку discounts.json, 
+                // но пока сделаем заглушку, чтобы работало сразу.
+                // Для полноценной работы нужно создать discounts.json на GitHub или отдавать из бота.
+                // Пока считаем, что скидок нет, если их нет в JSON.
+                const discounts = { byItem: {}, byCategory: {}, global: 0 }; 
+                
+                renderProducts(products, discounts);
+                updateCartUI();
+                document.getElementById('loading').style.display = 'none';
+            } catch (e) {
+                document.getElementById('loading').innerText = 'Ошибка загрузки: ' + e.message;
+                console.error(e);
+            }
+        }
+
+        // --- ОТРИСОВКА ТОВАРОВ ---
+        function renderProducts(items, discounts) {
+            const container = document.getElementById('products-container');
+            container.innerHTML = '';
+
+            if (!items || Object.keys(items).length === 0) {
+                container.innerHTML = '<div class="empty-state">Товары пока не добавлены в админке</div>';
+                return;
+            }
+
+            for (const key in items) {
+                const p = items[key];
+                p.key = key; // Сохраняем ключ
+                const calc = calculatePrice(p, discounts);
+
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                
+                let badge = '';
+                if (calc.percent > 0) {
+                    badge = `<div class="badge-sale">-\${calc.percent}%</div>`;
+                }
+
+                const oldPriceHtml = calc.percent > 0 ? `<span class="old-price">\${calc.original} ₽</span>` : '';
+
+                card.innerHTML = `
+                    \${badge}
+                    <div class="product-name">\${p.name}</div>
+                    <div class="product-price">
+                        \${calc.final} ₽
+                        \${oldPriceHtml}
+                    </div>
+                    <button onclick="addToCart('\${key}')">В корзину</button>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        // --- КОРЗИНА ---
+        function addToCart(key) {
+            cart[key] = (cart[key] || 0) + 1;
+            updateCartUI();
+        }
+
+        function removeFromCart(key) {
+            delete cart[key];
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const itemsEl = document.getElementById('cart-items');
+            const totalEl = document.getElementById('cart-total');
+            const btn = document.getElementById('checkout-btn');
+
+            itemsEl.innerHTML = '';
+            let total = 0;
+
+            for (const key in cart) {
+                const p = products[key];
+                if (!p) continue;
+                
+                // Пересчитываем цену со скидкой для корзины
+                const calc = calculatePrice(p, { byItem: {}, byCategory: {}, global: 0 }); // Тут нужна реальная логика скидок
+                
+                const itemTotal = calc.final * cart[key];
+                total += itemTotal;
+
+                const itemRow = document.createElement('div');
+                itemRow.className = 'cart-item';
+                itemRow.innerHTML = `
+                    <span>${p.name} × ${cart[key]}</span>
+                    <span style="color:var(--accent)">\${itemTotal} ₽</span>
+                    <button onclick="removeFromCart('\${key}')" style="padding:0 5px; background:none; color:var(--danger); font-size:12px;">✕</button>
+                `;
+                itemsEl.appendChild(itemRow);
+            }
+
+            totalEl.innerText = total;
+            btn.disabled = Object.keys(cart).length === 0;
+        }
+
+        // --- ОТПРАВКА ЗАКАЗА ---
+        document.getElementById('checkout-btn').addEventListener('click', () => {
+            if (Object.keys(cart).length === 0) return;
+
+            const orderData = {
+                order: 
+            };
+
+            for (const key in cart) {
+                const p = products[key];
+                if (p) {
+                    // Снова считаем цену со скидкой (упрощенно)
+                    const calc = calculatePrice(p, { byItem: {}, byCategory: {}, global: 0 });
+                    orderData.order.push({
+                        key: key,
+                        name: p.name,
+                        qty: cart[key],
+                        price: calc.final
+                    });
+                }
+            }
+
+            const dataString = JSON.stringify(orderData);
+            tg.sendData(dataString);
+            // tg.close(); // Можно закрыть после отправки
+        });
+
+        loadData();
+    </script>
 </body>
 </html>
