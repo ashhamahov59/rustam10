@@ -1,268 +1,459 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Apex | Онлайн Магазин</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-:root{
-  --bg:#0f1115; --card:#181c24; --card2:#1f2530; --text:#eef1f6; --muted:#8b93a3;
-  --accent:#4f8cff; --accent2:#7b5cff; --good:#2ecc71; --warn:#f39c12; --bad:#e74c3c;
-}
-*{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent}
-body{background:var(--bg); color:var(--text); font-family:-apple-system,'Segoe UI',Roboto,sans-serif; padding-bottom:96px}
-header{padding:18px 16px 6px; text-align:center}
-h1{font-size:26px; background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
-#cats{display:flex; gap:8px; overflow-x:auto; padding:12px 16px; scrollbar-width:none}
-#cats::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto; padding:8px 14px; border-radius:20px; background:var(--card); color:var(--muted); border:1px solid #2a3140; font-size:14px; cursor:pointer}
-.chip.on{background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff; border-color:transparent}
-#grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:4px 16px}
-.card{background:var(--card); border:1px solid #262d3a; border-radius:14px; overflow:hidden; display:flex; flex-direction:column}
-.card img{width:100%; aspect-ratio:1/1; object-fit:cover; background:var(--card2); display:block}
-.cbody{padding:10px; display:flex; flex-direction:column; gap:6px; flex:1}
-.cname{font-size:14px; font-weight:600; line-height:1.25}
-.ccat{font-size:11px; color:var(--muted)}
-.cprice{font-size:15px; font-weight:700}
-.cprice s{color:var(--muted); font-weight:400; font-size:12px; margin-left:4px}
-.cbadge{color:var(--good); font-size:12px; font-weight:600}
-.crow{margin-top:auto; display:flex; align-items:center; gap:8px}
-.qbtn{width:30px; height:30px; border-radius:9px; border:none; background:var(--card2); color:var(--text); font-size:17px; cursor:pointer}
-.qbtn:active{transform:scale(.93)}
-.qval{min-width:22px; text-align:center; font-weight:600}
-#cartbar{position:fixed; left:12px; right:12px; bottom:12px; background:var(--card2); border:1px solid #2a3140; border-radius:16px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 8px 24px rgba(0,0,0,.45)}
-#total{font-weight:700; font-size:16px}
-#checkout{padding:12px 20px; border:none; border-radius:12px; background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff; font-size:15px; font-weight:600; cursor:pointer}
-#checkout:active{transform:scale(.97)}
-.hidden{display:none !important}
-#result{position:fixed; inset:0; background:var(--bg); z-index:50; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center; gap:12px}
-#resIcon{font-size:52px}
-#resTitle{font-size:22px; font-weight:700}
-#resText{color:var(--muted); font-size:14px; line-height:1.5; max-width:420px}
-#orderText{background:var(--card); border:1px solid #262d3a; border-radius:12px; padding:12px; font-family:inherit; font-size:13px; color:var(--text); text-align:left; max-width:440px; width:100%; max-height:180px; overflow:auto; white-space:pre-wrap}
-#result button{padding:12px 20px; border:none; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer; width:100%; max-width:340px}
-#copyBtn{background:var(--card2); color:var(--text); border:1px solid #2a3140 !important}
-#newBtn{background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff}
-#debug{position:fixed; bottom:84px; left:12px; right:12px; background:#0b0e13; border:1px solid #222a36; border-radius:12px; padding:8px 12px; font-size:11px; color:var(--muted); z-index:40}
-#debug summary{cursor:pointer}
-#dbg{margin-top:6px; line-height:1.6; word-break:break-all}
-#testBtn{margin-top:6px; padding:6px 12px; border-radius:8px; border:1px solid #2a3140; background:var(--card2); color:var(--text); font-size:12px; cursor:pointer}
-#loadmsg{color:var(--muted); text-align:center; padding:30px 16px}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: var(--tg-theme-bg-color, #17212b);
+    color: var(--tg-theme-text-color, #ffffff);
+    padding-bottom: 100px;
+  }
+  .container { padding: 12px; }
+  h1 { font-size: 22px; margin-bottom: 10px; text-align: center; }
+  .status-box { text-align: center; padding: 40px 10px; color: var(--tg-theme-hint-color, #8aa); }
+  .error-box { text-align: center; padding: 20px 10px; color: #ff6b6b; font-size: 14px; white-space: pre-wrap; }
+  .result-box {
+    display: none; margin: 12px 0; padding: 14px; border-radius: 12px;
+    background: rgba(77,216,101,0.12); border: 1px solid rgba(77,216,101,0.5);
+    font-size: 14px; line-height: 1.45; color: var(--tg-theme-text-color, #fff);
+  }
+  .result-box.bad { background: rgba(255,107,107,0.12); border-color: rgba(255,107,107,0.5); }
+
+  .cat-row {
+    display: flex; overflow-x: auto; gap: 8px; padding: 4px 0 12px;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .cat-row::-webkit-scrollbar { display: none; }
+  .cat-chip {
+    flex: 0 0 auto; background: var(--tg-theme-secondary-bg-color, #232e3c);
+    color: var(--tg-theme-text-color, #fff); border: none; border-radius: 20px;
+    padding: 9px 16px; font-size: 14px; cursor: pointer; white-space: nowrap;
+  }
+  .cat-chip.active { background: #2f6fed; color: #fff; }
+
+  .back-btn {
+    background: transparent; color: var(--tg-theme-hint-color, #8aa);
+    border: none; font-size: 15px; padding: 4px 0 10px; cursor: pointer;
+  }
+  h2.cat-title { font-size: 18px; margin-bottom: 10px; }
+
+  .product-card {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: var(--tg-theme-secondary-bg-color, #232e3c);
+    border-radius: 12px; padding: 12px; margin-bottom: 10px;
+  }
+  .product-photo {
+    width: 74px; height: 74px; border-radius: 10px; object-fit: cover;
+    background: #1a2330; flex: 0 0 auto; display: none;
+  }
+  .product-emoji {
+    width: 74px; height: 74px; border-radius: 10px; background: #1a2330;
+    flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+    font-size: 34px;
+  }
+  .product-info { flex: 1 1 auto; min-width: 0; }
+  .product-card h3 { font-size: 16px; margin-bottom: 4px; }
+  .product-card .desc { font-size: 13px; color: var(--tg-theme-hint-color, #8aa); margin-bottom: 6px; }
+  .price-line { font-size: 15px; margin-bottom: 10px; }
+  .price-line .old { text-decoration: line-through; opacity: 0.6; margin-right: 6px; }
+  .price-line .new { color: #4dd865; font-weight: bold; }
+
+  .cart-item {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--tg-theme-secondary-bg-color, #232e3c);
+    border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+  }
+  .qty-controls { display: flex; align-items: center; gap: 8px; }
+  .qty-btn {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: none; background: #2f6fed; color: #fff; font-size: 16px; cursor: pointer;
+  }
+
+  .checkout-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--tg-theme-bg-color, #17212b);
+    padding: 10px 14px 14px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .total-line { text-align: right; font-size: 16px; margin-bottom: 8px; cursor: pointer; }
+  .checkout-btn {
+    width: 100%; padding: 14px; border: none; border-radius: 10px;
+    background: var(--tg-theme-button-color, #2f9e44);
+    color: var(--tg-theme-button-text-color, #fff);
+    font-size: 17px; cursor: pointer;
+  }
+  .copy-btn {
+    width: 100%; padding: 12px; margin-top: 8px; border: none; border-radius: 10px;
+    background: #2f6fed; color: #fff; font-size: 15px; cursor: pointer;
+  }
+
+  details.diag {
+    margin-top: 14px; border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px; padding: 10px 12px; font-size: 13px;
+    color: var(--tg-theme-hint-color, #8aa);
+  }
+  details.diag summary { cursor: pointer; outline: none; }
+  .diag pre { white-space: pre-wrap; font-family: inherit; margin-top: 8px; }
+  .diag button {
+    margin-top: 10px; padding: 9px 14px; border: none; border-radius: 8px;
+    background: #2f6fed; color: #fff; font-size: 13px; cursor: pointer;
+  }
+  .ver { text-align: center; font-size: 11px; color: var(--tg-theme-hint-color, #8aa); margin: 16px 0 6px; }
 </style>
 </head>
 <body>
-<header><h1>🛍 Apex</h1></header>
-<div id="cats"></div>
-<div id="loadmsg">Загрузка товаров...</div>
-<div id="grid"></div>
-<div id="cartbar">
-  <span id="total">Итого: 0 ₽</span>
-  <button id="checkout">Оформить заказ</button>
+<div class="container">
+  <h1>🛍 Apex</h1>
+  <div class="result-box" id="result"></div>
+  <div id="screen"><div class="status-box">Загрузка товаров...</div></div>
+  <div class="error-box" id="error"></div>
+
+  <details class="diag">
+    <summary>⚙️ Диагностика</summary>
+    <pre id="diaginfo">...</pre>
+    <button id="testbtn">🧪 Тест отправки</button>
+  </details>
+  <div class="ver">версия страницы: v13</div>
 </div>
 
-<div id="result" class="hidden">
-  <div id="resIcon"></div>
-  <div id="resTitle"></div>
-  <div id="resText"></div>
-  <pre id="orderText" class="hidden"></pre>
-  <button id="copyBtn" class="hidden">📋 Скопировать заказ</button>
-  <button id="newBtn" class="hidden">🛍 Продолжить покупки</button>
+<div class="checkout-bar">
+  <div class="total-line" id="total">Итого: 0 ₽</div>
+  <button class="checkout-btn" id="checkout">Оформить заказ</button>
 </div>
-
-<details id="debug">
-  <summary>⚙️ Диагностика</summary>
-  <div id="dbg"></div>
-  <button id="testBtn">🧪 Тест отправки</button>
-</details>
 
 <script>
-const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-if (tg) { tg.ready(); tg.expand(); }
-
-let PRODUCTS = {};
-let DISCOUNTS = {byItem:{}, byCategory:{}, global:0};
-const cart = {};
-let activeCat = "all";
-
-function discFor(p){
-  const it = DISCOUNTS.byItem[p.key]||0, ca = DISCOUNTS.byCategory[p.category]||0, gl = DISCOUNTS.global||0;
-  return it || ca || gl;
-}
-function finalPrice(p){
-  const pr = discFor(p);
-  return {pr, final: Math.round((p.price||0)*(1-pr/100))};
+var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+if (tg) {
+  try { tg.expand(); } catch (e) {}
 }
 
-function renderCats(){
-  const cats = [...new Set(Object.values(PRODUCTS).map(p=>p.category))].sort();
-  const box = document.getElementById('cats');
-  box.innerHTML = '';
-  const mk = (label, val) => {
-    const c = document.createElement('div');
-    c.className = 'chip' + (activeCat===val?' on':'');
-    c.textContent = label;
-    c.onclick = ()=>{ activeCat=val; renderCats(); renderGrid(); };
-    box.appendChild(c);
-  };
-  mk('📦 Все', 'all');
-  cats.forEach(c=>mk(c, c));
+var products = {};
+var discounts = { byItem: {}, byCategory: {}, global: 0 };
+var cart = {};
+var currentCategory = null;
+var orderJustSent = false;
+
+var screenEl = document.getElementById('screen');
+var errorEl = document.getElementById('error');
+var resultEl = document.getElementById('result');
+var totalEl = document.getElementById('total');
+var checkoutBtn = document.getElementById('checkout');
+
+// ---------- УТИЛИТЫ ----------
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-function renderGrid(){
-  const grid = document.getElementById('grid');
-  grid.innerHTML = '';
-  let shown = 0;
-  Object.values(PRODUCTS).forEach(p=>{
-    if(activeCat!=='all' && p.category!==activeCat) return;
-    shown++;
-    const {pr, final} = finalPrice(p);
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML =
-      '<img src="photos/' + encodeURIComponent(p.photo||'') + '" alt="" onerror="this.style.display=\'none\'">' +
-      '<div class="cbody">' +
-        '<div class="cname">' + (p.name||'') + '</div>' +
-        '<div class="ccat">' + (p.category||'') + '</div>' +
-        (pr ? '<div class="cbadge">🔥 -' + pr + '%</div>' : '') +
-        '<div class="cprice">' + final + ' ₽' + (pr ? ' <s>' + p.price + ' ₽</s>' : '') + '</div>' +
-        '<div class="crow">' +
-          '<button class="qbtn" data-a="minus">−</button>' +
-          '<span class="qval">' + (cart[p.key]||0) + '</span>' +
-          '<button class="qbtn" data-a="plus">+</button>' +
+function priceFor(key) {
+  var p = products[key];
+  if (!p) return { percent: 0, original: 0, final: 0 };
+  var percent = discounts.byItem[key] || discounts.byCategory[p.category] || discounts.global || 0;
+  var original = p.price || 0;
+  var final = Math.round(original * (1 - percent / 100));
+  return { percent: percent, original: original, final: final };
+}
+
+function cartCount() {
+  var n = 0;
+  for (var key in cart) n += cart[key];
+  return n;
+}
+
+function cartTotal() {
+  var sum = 0;
+  for (var key in cart) sum += priceFor(key).final * cart[key];
+  return sum;
+}
+
+function updateCartBar() {
+  totalEl.textContent = 'Итого: ' + cartTotal() + ' ₽' + (cartCount() ? ' (' + cartCount() + ' шт.)' : '');
+}
+
+function addToCart(key) {
+  cart[key] = (cart[key] || 0) + 1;
+  updateCartBar();
+  if (currentCategory) openCategory(currentCategory);
+  else renderChips();
+}
+
+function changeQty(key, d) {
+  cart[key] = (cart[key] || 0) + d;
+  if (cart[key] <= 0) delete cart[key];
+  updateCartBar();
+  if (currentCategory) openCategory(currentCategory);
+  else renderChips();
+}
+
+// ---------- ЭКРАН: КАТЕГОРИИ ----------
+
+function renderChips() {
+  var cats = [];
+  var seen = {};
+  for (var key in products) {
+    var c = products[key].category;
+    if (!seen[c]) { seen[c] = true; cats.push(c); }
+  }
+  cats.sort();
+  var html = '<div class="cat-row">';
+  html += '<button class="cat-chip ' + (currentCategory ? '' : 'active') +
+          '" onclick="openCategory(\'all\')">📦 Все</button>';
+  for (var i = 0; i < cats.length; i++) {
+    html += '<button class="cat-chip ' + (currentCategory === cats[i] ? 'active' : '') +
+            '" onclick="openCategory(this.dataset.c)" data-c="' + esc(cats[i]) + '">' + esc(cats[i]) + '</button>';
+  }
+  html += '</div>';
+  screenEl.innerHTML = html + '<div class="status-box">Выбери категорию выше 👆</div>';
+}
+
+function openCategory(cat) {
+  currentCategory = cat;
+  var cats = [];
+  var seen = {};
+  for (var key in products) {
+    var c = products[key].category;
+    if (!seen[c]) { seen[c] = true; cats.push(c); }
+  }
+  cats.sort();
+
+  var html = '<div class="cat-row">';
+  html += '<button class="cat-chip ' + (cat !== 'all' ? '' : 'active') +
+          '" onclick="openCategory(\'all\')">📦 Все</button>';
+  for (var i = 0; i < cats.length; i++) {
+    html += '<button class="cat-chip ' + (cat === cats[i] ? 'active' : '') +
+            '" onclick="openCategory(this.dataset.c)" data-c="' + esc(cats[i]) + '">' + esc(cats[i]) + '</button>';
+  }
+  html += '</div>';
+  html += '<h2 class="cat-title">' + (cat === 'all' ? '📦 Все товары' : '📁 ' + esc(cat)) + '</h2>';
+
+  var count = 0;
+  for (var key in products) {
+    var p = products[key];
+    if (cat !== 'all' && p.category !== cat) continue;
+    count++;
+    var pr = priceFor(key);
+    var priceHtml;
+    if (pr.percent > 0) {
+      priceHtml = '<span class="old">' + pr.original + ' ₽</span>' +
+                  '<span class="new">' + pr.final + ' ₽</span> <small>(-' + pr.percent + '%)</small>';
+    } else {
+      priceHtml = '<span class="new">' + pr.original + ' ₽</span>';
+    }
+    var photoHtml;
+    if (p.photo) {
+      photoHtml = '<img class="product-photo" id="ph_' + esc(key) + '" alt="" ' +
+                  'onerror="this.style.display=\'none\';document.getElementById(\'pe_' + esc(key) +
+                  '\').style.display=\'flex\'">' +
+                  '<div class="product-emoji" id="pe_' + esc(key) + '" style="display:none">📦</div>';
+    } else {
+      photoHtml = '<div class="product-emoji">📦</div>';
+    }
+    html +=
+      '<div class="product-card">' +
+        photoHtml +
+        '<div class="product-info">' +
+          '<h3>' + esc(p.name) + '</h3>' +
+          (p.desc ? '<div class="desc">' + esc(p.desc) + '</div>' : '') +
+          '<div class="price-line">' + priceHtml + '</div>' +
+          '<button class="add-btn" style="width:100%;padding:10px;border:none;border-radius:8px;background:var(--tg-theme-button-color,#2f9e44);color:#fff;font-size:15px;cursor:pointer" onclick="addToCart(this.dataset.k)" data-k="' + esc(key) + '">🛒 В корзину</button>' +
         '</div>' +
       '</div>';
-    const [minus, , plus] = card.querySelectorAll('.qbtn');
-    minus.onclick = ()=>{ cart[p.key] = Math.max(0,(cart[p.key]||0)-1); if(!cart[p.key]) delete cart[p.key]; refresh(); };
-    plus.onclick  = ()=>{ cart[p.key] = (cart[p.key]||0)+1; refresh(); };
-    grid.appendChild(card);
-  });
-  if(!shown) grid.innerHTML = '<div id="loadmsg">Товаров в этой категории нет</div>';
-}
-
-function refresh(){
-  renderGrid();
-  let total = 0;
-  Object.entries(cart).forEach(([k,q])=>{
-    const p = PRODUCTS[k];
-    if(p) total += finalPrice(p).final * q;
-  });
-  document.getElementById('total').textContent = 'Итого: ' + total + ' ₽';
-}
-
-function showResult(icon, title, text, orderStr, allowCopy){
-  document.getElementById('app') && 0;
-  document.getElementById('resIcon').textContent = icon;
-  document.getElementById('resTitle').textContent = title;
-  document.getElementById('resText').innerHTML = text;
-  const ot = document.getElementById('orderText');
-  if(orderStr){ ot.textContent = orderStr; ot.classList.remove('hidden'); } else ot.classList.add('hidden');
-  const cb = document.getElementById('copyBtn');
-  if(allowCopy){ cb.classList.remove('hidden'); cb.textContent = '📋 Скопировать заказ'; } else cb.classList.add('hidden');
-  document.getElementById('newBtn').classList.remove('hidden');
-  document.getElementById('result').classList.remove('hidden');
-  document.getElementById('debug').classList.add('hidden');
-  document.getElementById('cartbar').classList.add('hidden');
-}
-
-document.getElementById('newBtn').onclick = ()=>{
-  document.getElementById('result').classList.add('hidden');
-  document.getElementById('debug').classList.remove('hidden');
-  document.getElementById('cartbar').classList.remove('hidden');
-};
-
-document.getElementById('copyBtn').onclick = async ()=>{
-  const txt = document.getElementById('orderText').textContent;
-  try { await navigator.clipboard.writeText(txt); }
-  catch(e){
-    const ta = document.createElement('textarea');
-    ta.value = txt; document.body.appendChild(ta); ta.select();
-    document.execCommand('copy'); ta.remove();
   }
-  document.getElementById('copyBtn').textContent = '✅ Скопировано — вставь в чат с ботом';
-};
 
-function orderText(){
-  let lines = ['🛍 Заказ (Apex)', ''];
-  let total = 0;
-  Object.entries(cart).forEach(([k,q])=>{
-    const p = PRODUCTS[k];
-    if(!p) return;
-    const {final} = finalPrice(p);
-    lines.push('• ' + p.name + ' × ' + q + ' — ' + (final*q) + ' ₽');
-    total += final*q;
-  });
-  lines.push('', 'Итого: ' + total + ' ₽');
-  return lines.join('\n');
+  if (!count) html += '<div class="status-box">Товаров пока нет 🙂</div>';
+  screenEl.innerHTML = html;
+
+  // показываем фото, если оно загрузилось
+  for (var key in products) {
+    var img = document.getElementById('ph_' + cssId(key));
+    if (img) {
+      img.src = 'photos/' + products[key].photo;
+      if (img.complete && img.naturalWidth) img.style.display = 'block';
+      else img.onload = function () { this.style.display = 'block'; this.nextSibling && (this.nextSibling.style.display = 'none'); };
+    }
+  }
 }
 
-function buildOrder(){
-  return Object.entries(cart).filter(([k,q])=>q>0).map(([k,q])=>({key:k, qty:q}));
+function cssId(key) {
+  return String(key).replace(/[^a-zA-Z0-9_-]/g, '');
 }
 
-document.getElementById('checkout').onclick = ()=>{
-  const order = buildOrder();
-  if(!order.length){
-    showResult('🛒','Корзина пуста','Добавь товары кнопками + и − на карточках.', null, false);
-    return;
+function showCart() {
+  currentCategory = null;
+  var html = '<button class="back-btn" onclick="renderChips()">⬅️ К каталогу</button>';
+  html += '<h2 class="cat-title">🛒 Корзина</h2>';
+  var any = false;
+  var sum = 0;
+  for (var key in cart) {
+    any = true;
+    var p = products[key];
+    if (!p) continue;
+    var pr = priceFor(key);
+    sum += pr.final * cart[key];
+    html +=
+      '<div class="cart-item">' +
+        '<div><b>' + esc(p.name) + '</b><br><small>' + pr.final + ' ₽ × ' + cart[key] + '</small></div>' +
+        '<div class="qty-controls">' +
+          '<button class="qty-btn" onclick="changeQty(this.dataset.k,-1)" data-k="' + esc(key) + '">−</button>' +
+          '<span>' + cart[key] + '</span>' +
+          '<button class="qty-btn" onclick="changeQty(this.dataset.k,1)" data-k="' + esc(key) + '">+</button>' +
+        '</div>' +
+      '</div>';
   }
-  if(!tg || typeof tg.sendData !== 'function'){
-    showResult('⚠️','Страница открыта не из Telegram',
-      'Заказ можно отправить, только если магазин открыт из Telegram — кнопкой «🛍 Открыть магазин» в чате. Открой бота в Telegram и нажми эту кнопку.',
-      null, false);
-    return;
+  if (!any) html += '<div class="status-box">Корзина пуста 🙂</div>';
+  else html += '<div class="total-line" style="text-align:right;font-size:16px;margin:10px 0;">Итого: ' + sum + ' ₽</div>';
+  screenEl.innerHTML = html;
+}
+
+// ---------- ОФОРМЛЕНИЕ ЗАКАЗА ----------
+
+checkoutBtn.onclick = function () {
+  var n = cartCount();
+  if (!n) return;
+
+  var order = [];
+  for (var key in cart) order.push({ key: key, qty: cart[key] });
+  var payload = JSON.stringify({ order: order });
+
+  var lines = [];
+  var sum = 0;
+  for (var i = 0; i < order.length; i++) {
+    var p = products[order[i].key];
+    var pr = priceFor(order[i].key);
+    sum += pr.final * order[i].qty;
+    lines.push('• ' + (p ? p.name : order[i].key) + ' × ' + order[i].qty + ' — ' + (pr.final * order[i].qty) + ' ₽');
   }
+  var orderText = 'Заказ из Apex:\n' + lines.join('\n') + '\nИтого: ' + sum + ' ₽';
+
+  var sent = false;
   try {
-    tg.sendData(JSON.stringify({order}));
-    showResult('📨','Заказ отправлен в Telegram',
-      'Окно теперь не закрывается само.<br><br>Если в чате бот ответил «Заказ из приложения принят!» — всё отлично.<br><br>Если бот молчит больше 10 секунд — открой «⚙️ Диагностика» внизу и нажми «🧪 Тест отправки».',
-      null, false);
-  } catch(e){
-    showResult('⚠️','Telegram не принял отправку',
-      'Так бывает, когда магазин открыт через ☰ Меню, а не через кнопку «🛍 Открыть магазин» в чате.<br><br>Закрой магазин и открой его именно кнопкой в чате.<br><br>Ошибка: ' + (e && e.message ? e.message : e),
-      orderText(), true);
+    if (tg && typeof tg.sendData === 'function') {
+      tg.sendData(payload);
+      sent = true;
+    }
+  } catch (e) {
+    sent = false;
   }
+
+  if (sent) {
+    // Telegram сам закроет приложение после sendData на телефоне — это его нормальное поведение.
+    // Явно окно не закрываем.
+    resultEl.className = 'result-box';
+    resultEl.innerHTML = '✅ Заказ отправлен в Telegram.<br><br>' +
+      'Бот ответит в чате сообщением «Заказ из приложения принят!». ' +
+      'Если ответа нет — открой магазин через кнопку «🛍 Открыть магазин» <b>в чате</b> (не через ☰ Меню) и повтори заказ.';
+  } else {
+    resultEl.className = 'result-box bad';
+    resultEl.innerHTML = '⚠️ Не удалось отправить заказ из этого окна.<br><br>' +
+      'Скопируй заказ и пришли его боту сообщением:<br><br><b>' + esc(orderText) + '</b>';
+    addCopyButton(orderText);
+  }
+  resultEl.style.display = 'block';
+  cart = {};
+  updateCartBar();
+  window.scrollTo(0, 0);
 };
 
-document.getElementById('testBtn').onclick = ()=>{
-  if(!tg || typeof tg.sendData !== 'function'){ alert('Telegram не найден'); return; }
-  try { tg.sendData('test'); alert('Тест отправлен. Смотри консоль PyCharm: там должна появиться строка "текст: test"'); }
-  catch(e){ alert('Ошибка: ' + (e && e.message ? e.message : e)); }
+function addCopyButton(text) {
+  var btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = '📋 Скопировать заказ';
+  btn.onclick = function () {
+    var done = function () { btn.textContent = '✅ Скопировано'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text, done); });
+    } else {
+      fallbackCopy(text, done);
+    }
+  };
+  resultEl.appendChild(document.createElement('br'));
+  resultEl.appendChild(btn);
+}
+
+function fallbackCopy(text, done) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+
+// ---------- ДИАГНОСТИКА ----------
+
+function updateDiag(loaded, extra) {
+  var info = 'версия: v13\n' +
+    'платформа: ' + (tg && tg.platform ? tg.platform : 'неизвестно') + '\n' +
+    'версия WebApp: ' + (tg && tg.version ? tg.version : 'неизвестно') + '\n' +
+    'товаров загружено: ' + loaded + '\n' +
+    'sendData доступен: ' + (tg && typeof tg.sendData === 'function' ? 'да' : 'нет');
+  if (extra) info += '\n' + extra;
+  document.getElementById('diaginfo').textContent = info;
+}
+
+document.getElementById('testbtn').onclick = function () {
+  try {
+    if (tg && typeof tg.sendData === 'function') {
+      tg.sendData(JSON.stringify({ order: [] }));
+      resultEl.className = 'result-box';
+      resultEl.innerHTML = '🧪 Тест отправлен. Если бот ответил в чате «Корзина в приложении пуста 🙂» — доставка работает.';
+    } else {
+      resultEl.className = 'result-box bad';
+      resultEl.innerHTML = 'sendData недоступен в этом клиенте.';
+    }
+  } catch (e) {
+    resultEl.className = 'result-box bad';
+    resultEl.innerHTML = 'Ошибка отправки: ' + esc(String(e));
+  }
+  resultEl.style.display = 'block';
+  window.scrollTo(0, 0);
 };
 
-function diag(){
-  const d = document.getElementById('dbg');
-  if(!tg){ d.innerHTML = 'Telegram.WebApp: <b>не найден</b> — страница открыта в обычном браузере'; return; }
-  let u = null;
-  try { u = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.id : null; } catch(e){}
-  d.innerHTML =
-    'версия страницы: <b>v12</b><br>' +
-    'Telegram.WebApp: <b>есть</b><br>' +
-    'версия клиента: ' + (tg.version||'?') + '<br>' +
-    'платформа: ' + (tg.platform||'?') + '<br>' +
-    'sendData: <b>' + (typeof tg.sendData) + '</b><br>' +
-    'пользователь: ' + (u||'нет');
+totalEl.onclick = function () { if (!orderJustSent) showCart(); };
+
+// ---------- ЗАГРУЗКА ДАННЫХ ----------
+
+function load() {
+  var t = Date.now();
+  fetch('products.json?t=' + t)
+    .then(function (r) {
+      if (!r.ok) throw new Error('products.json не найден (код ' + r.status + ')');
+      return r.json();
+    })
+    .then(function (data) {
+      products = data || {};
+      for (var key in products) products[key].key = key;
+      return fetch('discounts.json?t=' + t);
+    })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) { if (d) discounts = d; })
+    .then(function () {
+      var count = 0;
+      for (var k in products) count++;
+      if (!count) {
+        screenEl.innerHTML = '<div class="status-box">Каталог пуст — проверь products.json</div>';
+        updateDiag(0, 'products.json загрузился, но пуст');
+        return;
+      }
+      renderChips();
+      updateCartBar();
+      updateDiag(count);
+    })
+    .catch(function (e) {
+      screenEl.innerHTML = '';
+      errorEl.textContent = 'Не удалось загрузить каталог: ' + e.message +
+        '\n\nПроверь, что products.json загружен в репозиторий рядом с index.html.';
+      updateDiag(0, 'ошибка: ' + e.message);
+    });
 }
 
-async function init(){
-  const bust = '?t=' + Date.now();
-  try{
-    const [pr, di] = await Promise.all([
-      fetch('products.json' + bust).then(r=>r.json()).catch(()=>({})),
-      fetch('discounts.json' + bust).then(r=>r.json()).catch(()=>null)
-    ]);
-    PRODUCTS = pr || {};
-    if(di) DISCOUNTS = {byItem: di.byItem||{}, byCategory: di.byCategory||{}, global: di.global||0};
-  }catch(e){
-    document.getElementById('loadmsg').textContent = 'Не удалось загрузить товары: ' + e;
-    return;
-  }
-  document.getElementById('loadmsg').classList.add('hidden');
-  renderCats();
-  renderGrid();
-  diag();
-}
-init();
+load();
 </script>
 </body>
 </html>
