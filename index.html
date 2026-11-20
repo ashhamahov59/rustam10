@@ -1,183 +1,253 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Apex</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<style>
-  body { font-family:-apple-system,'Segoe UI',Roboto,sans-serif; background:#121212; color:#fff; margin:0; padding:12px; padding-bottom:140px; }
-  h1 { font-size:22px; margin:4px 0 14px; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px; }
-  .card { background:#1e1e1e; border-radius:12px; padding:14px; text-align:center; display:flex; flex-direction:column; gap:8px; }
-  .name { font-size:14px; }
-  .price { font-size:17px; font-weight:700; color:#3390ec; }
-  .old { text-decoration:line-through; color:#888; font-size:12px; margin-right:4px; }
-  .badge { background:#ff5252; color:#fff; border-radius:4px; padding:2px 6px; font-size:10px; }
-  button { padding:11px; border:none; border-radius:10px; background:#3390ec; color:#fff; font-weight:600; font-size:14px; cursor:pointer; }
-  .bar { position:fixed; left:0; right:0; bottom:0; background:#1a1a1a; padding:12px; }
-  .total { text-align:right; font-size:17px; font-weight:700; margin-bottom:8px; }
-  .cartline { display:flex; justify-content:space-between; align-items:center; gap:6px; font-size:14px; margin-bottom:4px; }
-  .del { background:none; color:#ff5252; padding:0 6px; font-size:13px; cursor:pointer; }
-  .ok { display:none; background:#1d7a3e; color:#fff; padding:12px; border-radius:10px; text-align:center; margin-bottom:10px; }
-  .err { display:none; background:#8b1d1d; color:#fff; padding:12px; border-radius:10px; text-align:center; margin-bottom:10px; }
-  .empty { color:#888; text-align:center; padding:30px 0; }
-  .ver { color:#555; font-size:10px; text-align:center; margin-top:10px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Магазин</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #1c1c1e;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        h1 { margin-top: 0; color: #fff; }
+        .product-card {
+            background: #2c2c2e;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #3a3a3c;
+        }
+        .product-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+        .product-price {
+            font-size: 18px;
+            color: #007aff;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007aff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button:active { opacity: 0.8; }
+        .cart-summary {
+            background: #2c2c2e;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+            border: 1px solid #3a3a3c;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #3a3a3c;
+        }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-total {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-top: 12px;
+            text-align: right;
+        }
+        .checkout-btn {
+            background-color: #ff3b30;
+            margin-top: 16px;
+        }
+        .success-msg {
+            display: none;
+            background: #34c759;
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 16px;
+        }
+        .error-msg {
+            display: none;
+            background: #ff9500;
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 16px;
+        }
+        .version {
+            text-align: center;
+            color: #8e8e93;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-<h1>🛍 Apex</h1>
-<div id="ok" class="ok">✅ Заказ отправлен! Окно закроется через 2 секунды.</div>
-<div id="err" class="err"></div>
-<div id="status" class="empty">Загрузка товаров...</div>
-<div id="products" class="grid"></div>
-<div class="bar">
-  <div id="cartlines"></div>
-  <div class="total">Итого: <span id="total">0</span> ₽</div>
-  <button id="checkout-btn" style="width:100%">Оформить заказ</button>
-</div>
-<div class="ver">версия страницы: v6</div>
-<script>
-var tg = window.Telegram.WebApp;
-tg.ready();
-tg.expand();
+    <div class="container">
+        <h1>Магазин</h1>
+        <div id="products-list"></div>
+        
+        <div class="cart-summary" id="cart-view" style="display: none;">
+            <h3>Корзина</h3>
+            <div id="cart-items"></div>
+            <div class="cart-total">Итого: <span id="cart-total">0</span> ₽</div>
+            <button id="checkout-btn" class="checkout-btn">Оформить заказ</button>
+        </div>
 
-var products = {};
-var cart = {};
-var discounts = { byItem: {}, byCategory: {}, global: 0 };
+        <div id="ok" class="success-msg">Заказ отправлен! Окно закроется через 2 секунды.</div>
+        <div id="err" class="error-msg"></div>
+    </div>
+    <div class="version">версия страницы: v7</div>
 
-function showErr(t) {
-  var e = document.getElementById('err');
-  e.innerText = t;
-  e.style.display = 'block';
-  setTimeout(function () { e.style.display = 'none'; }, 6000);
-}
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
 
-function calcPrice(p) {
-  var pr = 0;
-  if (discounts.byItem && discounts.byItem[p.key]) {
-    pr = discounts.byItem[p.key];
-  } else if (discounts.byCategory && discounts.byCategory[p.category]) {
-    pr = discounts.byCategory[p.category];
-  } else if (discounts.global) {
-    pr = discounts.global;
-  }
-  return { final: Math.round(p.price * (1 - pr / 100)), percent: pr, original: p.price };
-}
+        // --- ВСТАВЛЕННЫЕ ДАННЫЕ ---
+        var BOT_TOKEN = '9027935818:AAGcmdwXnTPyQdxW7eTSu6w0g47yWrJG0bk';
+        var ADMIN_ID = 1641560713;
+        // --------------------------
 
-function load() {
-  fetch('products.json')
-    .then(function (r) {
-      if (!r.ok) throw new Error('products.json не найден (код ' + r.status + ')');
-      return r.json();
-    })
-    .then(function (data) {
-      products = data;
-      return fetch('discounts.json');
-    })
-    .then(function (r) { return r.ok ? r.json() : null; })
-    .then(function (d) { if (d) discounts = d; })
-    .then(function () {
-      render();
-      document.getElementById('status').style.display = 'none';
-    })
-    .catch(function (e) {
-      document.getElementById('status').innerText = '⚠ ' + e.message;
-    });
-}
+        var products = [
+            {
+                id: 'airpods_pro_3',
+                name: 'Airpods pro 3',
+                price: 2700,
+                currency: 'RUB'
+            }
+        ];
 
-function render() {
-  var box = document.getElementById('products');
-  box.innerHTML = '';
-  var keys = Object.keys(products);
-  if (!keys.length) {
-    document.getElementById('status').innerText = 'Товаров нет — добавь через админку бота';
-    document.getElementById('status').style.display = 'block';
-    return;
-  }
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    var p = products[key];
-    p.key = key;
-    var c = calcPrice(p);
-    var card = document.createElement('div');
-    card.className = 'card';
-    var h = '';
-    if (c.percent > 0) h += '<span class="badge">-' + c.percent + '%</span>';
-    h += '<div class="name">' + p.name + '</div>';
-    h += '<div class="price">' + (c.percent > 0 ? '<span class="old">' + c.original + ' ₽</span>' : '') + c.final + ' ₽</div>';
-    card.innerHTML = h;
-    var b = document.createElement('button');
-    b.innerText = 'В корзину';
-    b.setAttribute('data-key', key);
-    card.appendChild(b);
-    box.appendChild(card);
-  }
-}
+        var cart = {};
 
-function drawCart() {
-  var lines = document.getElementById('cartlines');
-  lines.innerHTML = '';
-  var total = 0;
-  for (var key in cart) {
-    var p = products[key];
-    if (!p) continue;
-    var c = calcPrice(p);
-    var sum = c.final * cart[key];
-    total += sum;
-    var row = document.createElement('div');
-    row.className = 'cartline';
-    var l = document.createElement('span');
-    l.innerText = p.name + ' × ' + cart[key];
-    var r = document.createElement('span');
-    r.innerText = sum + ' ₽';
-    var d = document.createElement('button');
-    d.className = 'del';
-    d.innerText = '✕';
-    d.setAttribute('data-del', key);
-    row.appendChild(l);
-    row.appendChild(r);
-    row.appendChild(d);
-    lines.appendChild(row);
-  }
-  document.getElementById('total').innerText = total;
-}
+        function renderProducts() {
+            var list = document.getElementById('products-list');
+            list.innerHTML = '';
+            products.forEach(function(p) {
+                var card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <div class="product-name">\${p.name}</div>
+                    <div class="product-price">\${p.price} ₽</div>
+                    <button onclick="addToCart('\${p.id}')">В корзину</button>
+                `;
+                list.appendChild(card);
+            });
+        }
 
-document.body.addEventListener('click', function (e) {
-  var t = e.target;
-  if (t.hasAttribute && t.hasAttribute('data-key')) {
-    var key = t.getAttribute('data-key');
-    cart[key] = (cart[key] || 0) + 1;
-    drawCart();
-  }
-  if (t.hasAttribute && t.hasAttribute('data-del')) {
-    delete cart[t.getAttribute('data-del')];
-    drawCart();
-  }
-});
+        function addToCart(id) {
+            if (!cart[id]) cart[id] = 0;
+            cart[id]++;
+            renderCart();
+        }
 
-document.getElementById('checkout-btn').addEventListener('click', function () {
-  try {
-    var keys = Object.keys(cart);
-    if (!keys.length) {
-      tg.showAlert('Корзина пуста! Сначала добавьте товар кнопкой "В корзину"');
-      return;
-    }
-    var order = [];
-    for (var i = 0; i < keys.length; i++) {
-      var p = products[keys[i]];
-      if (!p) continue;
-      order.push({ key: keys[i], name: p.name, qty: cart[keys[i]], price: calcPrice(p).final });
-    }
-    tg.sendData(JSON.stringify({ order: order }));
-    document.getElementById('ok').style.display = 'block';
-    setTimeout(function () { tg.close(); }, 2000);
-  } catch (e) {
-    showErr('Ошибка оформления: ' + e.message);
-  }
-});
+        function removeFromCart(id) {
+            if (cart[id]) {
+                cart[id]--;
+                if (cart[id] <= 0) delete cart[id];
+                renderCart();
+            }
+        }
 
-load();
-</script>
+        function renderCart() {
+            var view = document.getElementById('cart-view');
+            var itemsContainer = document.getElementById('cart-items');
+            var totalEl = document.getElementById('cart-total');
+            
+            var keys = Object.keys(cart);
+            if (keys.length === 0) {
+                view.style.display = 'none';
+                return;
+            }
+            view.style.display = 'block';
+            itemsContainer.innerHTML = '';
+            var total = 0;
+
+            keys.forEach(function(id) {
+                var p = products.find(prod => prod.id === id);
+                if (!p) return;
+                var itemTotal = p.price * cart[id];
+                total += itemTotal;
+
+                var itemRow = document.createElement('div');
+                itemRow.className = 'cart-item';
+                itemRow.innerHTML = `
+                    <span>${p.name} × ${cart[id]}</span>
+                    <span>\${itemTotal} ₽</span>
+                `;
+                itemsContainer.appendChild(itemRow);
+            });
+
+            totalEl.innerText = total;
+        }
+
+        function showErr(msg) {
+            document.getElementById('err').innerText = msg;
+            document.getElementById('err').style.display = 'block';
+        }
+
+        document.getElementById('checkout-btn').addEventListener('click', function () {
+            try {
+                var keys = Object.keys(cart);
+                if (!keys.length) {
+                    tg.showAlert('Корзина пуста! Сначала добавьте товар кнопкой "В корзину"');
+                    return;
+                }
+                var order = ;
+                var total = 0;
+                for (var i = 0; i < keys.length; i++) {
+                    var p = products.find(prod => prod.id === keys[i]);
+                    if (!p) continue;
+                    var c = p.price;
+                    order.push({ key: keys[i], name: p.name, qty: cart[keys[i]], price: c });
+                    total += c * cart[keys[i]];
+                }
+                var u = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user : null;
+                var who = u ? ((u.username ? '@' + u.username : '') + ' (id ' + u.id + ')') : 'нет данных о пользователе';
+                var lines = order.map(function (o) {
+                    return '• ' + o.name + ' × ' + o.qty + ' — ' + (o.price * o.qty) + ' ₽';
+                }).join('\n');
+                var text = '🛍 НОВЫЙ ЗАКАЗ из Mini App\n\n' + lines + '\n\nИтого: ' + total + ' ₽\nКлиент: ' + who;
+
+                fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage?chat_id=' + ADMIN_ID + '&text=' + encodeURIComponent(text))
+                    .then(function (r) { return r.json(); })
+                    .then(function (res) {
+                        if (res.ok) {
+                            document.getElementById('ok').style.display = 'block';
+                            setTimeout(function () { tg.close(); }, 2000);
+                        } else {
+                            showErr('Telegram ответил ошибкой: ' + (res.description || 'неизвестно'));
+                        }
+                    })
+                    .catch(function (e) {
+                        showErr('Ошибка сети: ' + e.message);
+                    });
+            } catch (e) {
+                showErr('Ошибка оформления: ' + e.message);
+            }
+        });
+
+        renderProducts();
+    </script>
 </body>
 </html>
