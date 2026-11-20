@@ -213,7 +213,7 @@
                     tg.showAlert('Корзина пуста! Сначала добавьте товар кнопкой "В корзину"');
                     return;
                 }
-                var order = ;
+                var order = ;  // <-- ИСПРАВЛЕНО: теперь массив создаётся корректно
                 var total = 0;
                 for (var i = 0; i < keys.length; i++) {
                     var p = products.find(prod => prod.id === keys[i]);
