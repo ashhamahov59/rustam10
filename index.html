@@ -2,226 +2,260 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Apex</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Apex | Онлайн Магазин</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  body{font-family:-apple-system,Arial,sans-serif;background:#17212b;color:#fff;margin:0;padding-bottom:130px;}
-  h1{text-align:center;color:#7c8fff;}
-  #warn{background:#3a2f10;color:#ffd66b;padding:10px;border-radius:10px;margin:10px;font-size:13px;}
-  .chips{display:flex;gap:8px;overflow-x:auto;padding:8px 10px;}
-  .chip{padding:8px 14px;border-radius:20px;background:#232e3c;white-space:nowrap;cursor:pointer;}
-  .chip.on{background:#5288ff;}
-  .card{background:#1f2a37;border-radius:12px;margin:8px 10px;padding:10px;}
-  .card img{width:100%;max-height:180px;object-fit:cover;border-radius:8px;}
-  .pname{font-weight:bold;margin:6px 0;}
-  .row{display:flex;justify-content:space-between;align-items:center;margin-top:6px;}
-  .cnt button{width:30px;height:30px;border-radius:8px;border:none;background:#5288ff;color:#fff;font-size:16px;margin:0 4px;}
-  #bottom{position:fixed;bottom:0;left:0;right:0;background:#1f2a37;padding:10px;display:flex;justify-content:space-between;align-items:center;}
-  #checkout{background:#5288ff;color:#fff;border:none;border-radius:10px;padding:12px 18px;font-size:16px;cursor:pointer;}
-  #status{margin:10px;padding:10px;border-radius:10px;display:none;font-size:14px;}
-  details{margin:10px;background:#1f2a37;border-radius:10px;padding:8px 10px;font-size:13px;}
-  .copy{margin:0 10px 10px;}
-  .copy button{width:100%;padding:10px;border-radius:10px;border:none;background:#2b5278;color:#fff;cursor:pointer;}
-  #testbtn{margin-top:8px;padding:8px 12px;border-radius:8px;border:none;background:#2b5278;color:#fff;cursor:pointer;}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background:#0f0f13; color:#eee; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
+  .wrap { max-width:640px; margin:0 auto; padding:14px 14px 110px; }
+  h1 { text-align:center; font-size:26px; margin:10px 0 16px; }
+  .warn { background:#3a2e14; border:1px solid #7a5c1e; color:#ffd97a; font-size:12px; line-height:1.45; padding:10px 12px; border-radius:12px; margin-bottom:14px; }
+  #cats { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+  .chip { background:#23232b; color:#ddd; border:none; border-radius:20px; padding:8px 16px; font-size:14px; cursor:pointer; }
+  .chip.on { background:#4f6ef7; color:#fff; }
+  #grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; }
+  .card { background:#1a1a21; border-radius:14px; overflow:hidden; padding-bottom:10px; }
+  .card img, .card .noimg { width:100%; height:110px; object-fit:cover; display:block; background:#23232b; }
+  .card .noimg { display:flex; align-items:center; justify-content:center; font-size:34px; }
+  .card .nm { font-size:14px; font-weight:600; padding:8px 10px 2px; }
+  .card .pr { font-size:14px; padding:0 10px 8px; }
+  .card .pr s { color:#888; font-size:12px; margin-left:4px; }
+  .card .row { display:flex; align-items:center; gap:8px; padding:0 10px; }
+  .card .row button { background:#2f2f3a; color:#fff; border:none; border-radius:8px; width:30px; height:30px; font-size:16px; cursor:pointer; }
+  .card .row .q { min-width:18px; text-align:center; }
+  .card .add { width:calc(100% - 20px); margin:0 10px; margin-top:8px; background:#4f6ef7; color:#fff; border:none; border-radius:10px; padding:9px 0; font-size:13px; cursor:pointer; }
+  .result { background:#16241a; border:1px solid #2e6b45; border-radius:14px; padding:14px; margin-top:14px; font-size:14px; line-height:1.5; }
+  .result pre { background:#0c0f0d; border-radius:8px; padding:10px; margin:10px 0; white-space:pre-wrap; font-size:12px; }
+  .result button { background:#2b7a4b; color:#fff; border:none; border-radius:10px; padding:10px 14px; font-size:14px; cursor:pointer; margin-top:4px; }
+  .result button.alt { background:#3a3a45; }
+  .diag { background:#181820; border-radius:14px; padding:12px; margin-top:18px; font-size:13px; color:#9aa; line-height:1.7; }
+  .diag summary { color:#ccc; cursor:pointer; }
+  .diag button { background:#4f6ef7; color:#fff; border:none; border-radius:10px; padding:8px 14px; font-size:13px; cursor:pointer; margin-top:8px; }
+  .bottom { position:fixed; left:0; right:0; bottom:0; background:#17171d; border-top:1px solid #26262e; padding:12px 14px calc(12px + env(safe-area-inset-bottom)); }
+  .bottom .in { max-width:640px; margin:0 auto; display:flex; align-items:center; gap:12px; }
+  .bottom .total { font-size:17px; font-weight:700; white-space:nowrap; }
+  .bottom button { flex:1; background:#4f6ef7; color:#fff; border:none; border-radius:14px; padding:15px 0; font-size:16px; font-weight:700; cursor:pointer; }
+  .empty { text-align:center; color:#777; padding:30px 0; font-size:14px; }
 </style>
 </head>
 <body>
-<div id="warn">⚠️ Заказ доставляется ТОЛЬКО когда магазин открыт кнопкой «🛍 Открыть магазин» в сообщении бота (кнопка у поля ввода или в /start). Через меню ☰ сверху Telegram молча НЕ отправляет заказ — так устроен Telegram.</div>
-<h1>🛍 Apex</h1>
-<div class="chips" id="cats"></div>
-<div id="list"></div>
-<div id="status"></div>
-<div class="copy" id="copybox" style="display:none"><button onclick="copyOrder()">📋 Скопировать заказ и вставить в чат</button></div>
-<details><summary>⚙️ Диагностика</summary><div id="diag">…</div><button id="testbtn">🧪 Тест отправки</button></details>
-<div id="bottom"><div>Итого: <span id="total">0</span> ₽</div><button id="checkout">Оформить заказ</button></div>
+<div class="wrap">
+  <h1>🛍 Apex</h1>
+  <div class="warn">⚠️ Заказ доходит, только когда магазин открыт кнопкой «🛍 Открыть магазин» в чате (у поля ввода или в сообщении бота). Через меню ☰ сверху Telegram молча НЕ отправляет заказ — тогда используйте кнопку копирования ниже.</div>
+  <div id="cats"></div>
+  <div id="grid"><div class="empty">Загружаю товары…</div></div>
+
+  <div id="result" class="result" style="display:none"></div>
+
+  <details class="diag">
+    <summary>⚙️ Диагностика</summary>
+    <div id="diagInfo">…</div>
+    <button id="testBtn">🧪 Тест отправки</button>
+  </details>
+</div>
+
+<div class="bottom">
+  <div class="in">
+    <div class="total">Итого: <span id="total">0 ₽</span></div>
+    <button id="orderBtn">Оформить заказ</button>
+  </div>
+</div>
+
 <script>
-const APP_VER = 'v14';
-let tg = null;
-try { tg = window.Telegram.WebApp; } catch(e) {}
-if (tg) { try { tg.ready(); tg.expand(); } catch(e) {} }
+const tg = window.Telegram.WebApp;
+tg.ready(); tg.expand();
 
-let PRODUCTS = {};
-let DISC = { byItem:{}, byCategory:{}, global:0 };
+const VERSION = 'v15';
+const BASE = location.href.split('?')[0];
+
+let products = {};
+let discounts = { byItem:{}, byCategory:{}, global:0 };
 let cart = {};
-let curCat = 'all';
+let activeCat = 'all';
 
-function discPct(p){
-  const a = DISC.byItem[p.key] || 0;
-  const b = DISC.byCategory[p.category] || 0;
-  const g = DISC.global || 0;
-  return a || b || g;
-}
-function priceOf(p){
-  const pc = discPct(p);
-  return pc ? Math.round(p.price * (1 - pc/100)) : p.price;
-}
-function fmt(n){ return (n||0).toLocaleString('ru-RU'); }
+function fmt(n) { return n + ' ₽'; }
 
-function renderCats(){
-  const el = document.getElementById('cats');
-  const cats = [];
-  for (const k in PRODUCTS){
-    const c = PRODUCTS[k].category || 'Прочее';
-    if (cats.indexOf(c) === -1) cats.push(c);
-  }
-  let html = '<div class="chip' + (curCat==='all'?' on':'') + '" data-cat="all">📦 Все</div>';
-  for (const c of cats){
-    html += '<div class="chip' + (curCat===c?' on':'') + '" data-cat="' + c + '">' + c + '</div>';
-  }
-  el.innerHTML = html;
-  const chips = el.querySelectorAll('.chip');
-  for (const ch of chips){
-    ch.onclick = function(){ curCat = ch.getAttribute('data-cat'); renderCats(); renderList(); };
-  }
+function discPercent(p) {
+  const byItem = discounts.byItem[p.key] || 0;
+  const byCat  = discounts.byCategory[p.category] || 0;
+  const glob   = discounts.global || 0;
+  return byItem || byCat || glob;
+}
+function finalPrice(p) {
+  const pct = discPercent(p);
+  return { pct: pct, price: Math.round(p.price * (1 - pct / 100)) };
 }
 
-function renderList(){
-  const el = document.getElementById('list');
-  const keys = [];
-  for (const k in PRODUCTS){
-    if (curCat === 'all' || (PRODUCTS[k].category || 'Прочее') === curCat) keys.push(k);
-  }
-  if (!keys.length){
-    el.innerHTML = '<p style="text-align:center;color:#8a99a8">Товаров пока нет 🤷</p>';
-    updateTotal();
+async function load() {
+  const t = Date.now();
+  try {
+    const r1 = await fetch('products.json?t=' + t);
+    products = await r1.json();
+  } catch(e) { products = {}; }
+  try {
+    const r2 = await fetch('discounts.json?t=' + t);
+    discounts = await r2.json();
+    if (!discounts.byItem) discounts.byItem = {};
+    if (!discounts.byCategory) discounts.byCategory = {};
+    if (!discounts.global) discounts.global = 0;
+  } catch(e) { discounts = { byItem:{}, byCategory:{}, global:0 }; }
+  renderCats();
+  renderGrid();
+  renderDiag();
+}
+
+function cats() {
+  const s = new Set();
+  for (const k in products) s.add(products[k].category);
+  return Array.from(s).sort();
+}
+
+function renderCats() {
+  const box = document.getElementById('cats');
+  box.innerHTML = '';
+  const mk = (label, val) => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (activeCat === val ? ' on' : '');
+    b.textContent = label;
+    b.onclick = () => { activeCat = val; renderCats(); renderGrid(); };
+    box.appendChild(b);
+  };
+  mk('📦 Все', 'all');
+  cats().forEach(c => mk(c, c));
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  const list = Object.values(products).filter(p => activeCat === 'all' || p.category === activeCat);
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty">Товаров пока нет 🤷</div>';
     return;
   }
-  let html = '';
-  for (const k of keys){
-    const p = PRODUCTS[k];
-    const pr = priceOf(p);
-    const pc = discPct(p);
-    const q = cart[k] || 0;
-    let priceHtml;
-    if (pc) priceHtml = '<s>' + fmt(p.price) + ' ₽</s> ' + fmt(pr) + ' ₽ (−' + pc + '%)';
-    else priceHtml = fmt(pr) + ' ₽';
-    html += '<div class="card">'
-      + (p.photo ? '<img src="photos/' + p.photo + '" onerror="this.style.display=\'none\'">' : '')
-      + '<div class="pname">' + p.name + '</div>'
-      + '<div class="row"><span>' + priceHtml + '</span>'
-      + '<span class="cnt"><button onclick="chQty(\'' + k + '\',-1)">−</button> ' + q
-      + ' <button onclick="chQty(\'' + k + '\',1)">+</button></span></div>'
-      + '</div>';
-  }
-  el.innerHTML = html;
-  updateTotal();
+  list.forEach(p => {
+    const fp = finalPrice(p);
+    const card = document.createElement('div');
+    card.className = 'card';
+    let photoHtml;
+    if (p.photo) {
+      photoHtml = '<img src="' + BASE + 'photos/' + encodeURIComponent(p.photo) + '" alt="" onerror="this.outerHTML=\'<div class=noimg>📦</div>\'">';
+    } else {
+      photoHtml = '<div class="noimg">📦</div>';
+    }
+    const qty = cart[p.key] || 0;
+    card.innerHTML =
+      photoHtml +
+      '<div class="nm">' + esc(p.name) + '</div>' +
+      '<div class="pr">' + fmt(fp.price) + (fp.pct ? ' <s>' + fmt(p.price) + '</s>' : '') + '</div>' +
+      '<div class="row">' +
+        '<button data-a="minus">−</button><span class="q">' + qty + '</span><button data-a="plus">+</button>' +
+      '</div>' +
+      '<button class="add">В корзину</button>';
+    const qEl = card.querySelector('.q');
+    card.querySelector('[data-a=plus]').onclick = () => { cart[p.key] = (cart[p.key] || 0) + 1; qEl.textContent = cart[p.key]; updateTotal(); };
+    card.querySelector('[data-a=minus]').onclick = () => { if (cart[p.key]) { cart[p.key]--; qEl.textContent = cart[p.key]; updateTotal(); } };
+    card.querySelector('.add').onclick = () => { cart[p.key] = (cart[p.key] || 0) + 1; qEl.textContent = cart[p.key]; updateTotal(); };
+    grid.appendChild(card);
+  });
 }
 
-function chQty(k, d){
-  cart[k] = (cart[k] || 0) + d;
-  if (cart[k] < 0) cart[k] = 0;
-  renderList();
-}
-function updateTotal(){
-  let t = 0;
-  for (const k in cart){
-    if (cart[k] > 0 && PRODUCTS[k]) t += priceOf(PRODUCTS[k]) * cart[k];
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function itemsList() {
+  const out = [];
+  for (const k in cart) {
+    if (cart[k] > 0 && products[k]) out.push({ key: k, qty: cart[k] });
   }
-  document.getElementById('total').textContent = fmt(t);
+  return out;
 }
 
-function buildItems(){
-  const items = [];
-  for (const k in cart){
-    if (cart[k] > 0 && PRODUCTS[k]) items.push({ key: k, qty: cart[k] });
-  }
-  return items;
+function totalSum() {
+  let sum = 0;
+  itemsList().forEach(it => { sum += finalPrice(products[it.key]).price * it.qty; });
+  return sum;
 }
-function orderText(){
-  const items = buildItems();
-  let t = '🛍 Заказ из Apex:\n';
+
+function updateTotal() {
+  document.getElementById('total').textContent = fmt(totalSum());
+}
+
+function orderText(items) {
+  let lines = ['🛍 Заказ из Apex:'];
   let total = 0;
-  for (const it of items){
-    const p = PRODUCTS[it.key];
-    const pr = priceOf(p);
-    t += '• ' + p.name + ' × ' + it.qty + ' — ' + fmt(pr * it.qty) + ' ₽\n';
-    total += pr * it.qty;
-  }
-  t += 'Итого: ' + fmt(total) + ' ₽';
-  return t;
+  items.forEach(it => {
+    const p = products[it.key];
+    const fp = finalPrice(p);
+    lines.push('• ' + p.name + ' × ' + it.qty + ' — ' + (fp.price * it.qty) + ' ₽');
+    total += fp.price * it.qty;
+  });
+  lines.push('Итого: ' + total + ' ₽');
+  return lines.join('\n');
 }
 
-function showStatus(html, ok){
-  const s = document.getElementById('status');
-  s.innerHTML = html;
-  s.style.display = 'block';
-  s.style.background = ok ? '#1c3324' : '#3a1f1f';
-  s.style.color = ok ? '#7ee2a8' : '#ff8a8a';
+function showResult(html) {
+  const box = document.getElementById('result');
+  box.innerHTML = html;
+  box.style.display = 'block';
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function checkout(){
-  const items = buildItems();
-  if (!items.length){ showStatus('Корзина пуста — добавь товар кнопкой ➕', false); return; }
-  const payload = JSON.stringify({ order: items });
-  let sent = false, err = '';
-  try {
-    if (tg && typeof tg.sendData === 'function'){ tg.sendData(payload); sent = true; }
-    else err = 'sendData недоступен';
-  } catch(e){ err = e.message; }
-  if (sent){
-    showStatus('✅ Заказ отправлен в чат. Бот ответит подтверждением.<br><br>'
-      + 'Если бот МОЛЧИТ — значит магазин открыт не из кнопки чата: закрой это окно и открой магазин через кнопку «🛍 Открыть магазин» в сообщении бота.', true);
-    cart = {}; renderList();
+function copyText(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      () => alert('Заказ скопирован. Вставь его в чат с ботом и отправь.'),
+      () => fallbackCopy(text)
+    );
   } else {
-    showStatus('❌ Не смог отправить: ' + err, false);
-    document.getElementById('copybox').style.display = 'block';
+    fallbackCopy(text);
   }
 }
-
-function copyOrder(){
-  const t = orderText();
-  if (navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(t).then(function(){
-      showStatus('📋 Заказ скопирован — закрой окно, вставь его сообщением в чат с ботом', true);
-    });
-  } else {
-    showStatus('<pre style="white-space:pre-wrap">' + t + '</pre>', true);
-  }
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); alert('Заказ скопирован. Вставь его в чат с ботом и отправь.'); }
+  catch(e) { alert('Не получилось скопировать автоматически. Выдели и скопируй текст заказа вручную:'); showResult('<b>Текст заказа:</b><pre>' + esc(text) + '</pre>'); }
+  document.body.removeChild(ta);
 }
 
-function testSend(){
+document.getElementById('orderBtn').onclick = () => {
+  const items = itemsList();
+  if (!items.length) { showResult('🛒 Корзина пуста — добавь товар.'); return; }
+  const text = orderText(items);
   try {
-    tg.sendData(JSON.stringify({ order: [], test: true }));
-    showStatus('🧪 Тест отправлен. Если бот ответил в чате «Корзина в приложении пуста 🙂» — доставка работает. Если тишина — окно открыто не из кнопки чата.', true);
-  } catch(e){
-    showStatus('🧪 Ошибка отправки: ' + e.message, false);
+    tg.sendData(JSON.stringify({ order: items }));
+    showResult('✅ <b>Заказ отправлен!</b><br>Если бот не ответил в чате в течение 10 секунд — Telegram не доставил сообщение (так бывает при открытии через ☰). Тогда нажми кнопку ниже.<br><pre>' + esc(text) + '</pre><button onclick="copyText(window.__orderText)">📋 Скопировать заказ и вставить в чат</button>');
+    window.__orderText = text;
+  } catch(e) {
+    window.__orderText = text;
+    showResult('❌ Отправить не удалось. Скопируй заказ и вставь его в чат с ботом:<pre>' + esc(text) + '</pre><button onclick="copyText(window.__orderText)">📋 Скопировать заказ и вставить в чат</button>');
   }
-}
+};
 
-function diag(){
-  const hasTg = !!tg;
-  let d = 'версия: ' + APP_VER
-    + '<br>платформа: ' + (hasTg ? tg.platform : '—')
-    + '<br>версия WebApp: ' + (hasTg ? tg.version : '—')
-    + '<br>товаров загружено: ' + Object.keys(PRODUCTS).length
-    + '<br>initData: ' + (hasTg && tg.initData ? ('есть, ' + tg.initData.length + ' симв.') : 'НЕТ')
-    + '<br>sendData: ' + (hasTg && typeof tg.sendData === 'function' ? 'есть' : 'нет');
-  document.getElementById('diag').innerHTML = d;
-}
-
-async function load(){
+document.getElementById('testBtn').onclick = () => {
   try {
-    const r = await fetch('products.json?t=' + Date.now());
-    PRODUCTS = await r.json();
-    for (const k in PRODUCTS){ PRODUCTS[k].key = k; }
-  } catch(e){
-    document.getElementById('list').innerHTML =
-      '<p style="color:#ff8a8a;padding:0 14px">Не смог загрузить products.json: ' + e.message + '</p>';
+    tg.sendData(JSON.stringify({ order: [] }));
+    showResult('🧪 Тест отправлен. Если бот ответил в чате «Корзина в приложении пуста 🙂» — доставка работает.');
+  } catch(e) {
+    showResult('❌ sendData недоступен: ' + esc(String(e)));
   }
-  try {
-    const r2 = await fetch('discounts.json?t=' + Date.now());
-    const d = await r2.json();
-    if (d && d.byItem) DISC = d;
-  } catch(e){}
-  renderCats();
-  renderList();
-  diag();
+};
+
+function renderDiag() {
+  const n = Object.keys(products).length;
+  document.getElementById('diagInfo').innerHTML =
+    'версия: ' + VERSION + '<br>' +
+    'платформа: ' + (tg.platform || '?') + '<br>' +
+    'версия WebApp: ' + (tg.version || '?') + '<br>' +
+    'товаров загружено: ' + n + '<br>' +
+    'sendData доступен: ' + (typeof tg.sendData === 'function' ? 'да' : 'нет');
 }
 
-document.getElementById('checkout').onclick = checkout;
-document.getElementById('testbtn').onclick = testSend;
-window.addEventListener('DOMContentLoaded', load);
+load();
 </script>
 </body>
 </html>
