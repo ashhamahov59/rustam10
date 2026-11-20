@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body { font-family: sans-serif; background: var(--tg-theme-bg-color, #fff);
+           color: var(--tg-theme-text-color, #000); padding: 16px; }
+    button { padding: 12px; width: 100%; margin: 6px 0; border: none;
+             border-radius: 10px; background: #3390ec; color: #fff; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h2>🛍 Мой магазин</h2>
+  <div id="goods"></div>
+  <button onclick="sendData()">Оформить заказ</button>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand(); // развернуть на весь экран
+
+    // Пока тестовые товары — потом будут приходить с сервера
+    const goods = [
+      {name: "AirPods Pro 2", price: 3500},
+      {name: "Apple Watch S9", price: 4200},
+    ];
+
+    const box = document.getElementById("goods");
+    goods.forEach(g => {
+      const b = document.createElement("button");
+      b.textContent = `${g.name} — ${g.price} ₽`;
+      b.onclick = () => tg.HapticFeedback.impactOccurred("light");
+      box.appendChild(b);
+    });
+
+    function sendData() {
+      tg.sendData(JSON.stringify({order: goods.map(g => g.name)}));
+      tg.close();
+    }
+  </script>
+</body>
+</html>
