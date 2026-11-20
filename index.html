@@ -1,266 +1,268 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Apex | Онлайн Магазин</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif;
-    background: #0f0f14; color: #f2f2f7; padding-bottom: 96px;
-  }
-  header {
-    position: sticky; top: 0; z-index: 10;
-    background: rgba(15,15,20,.92); backdrop-filter: blur(12px);
-    padding: 14px 16px 10px;
-    border-bottom: 1px solid rgba(255,255,255,.08);
-  }
-  header h1 { font-size: 22px; font-weight: 800; letter-spacing: .3px; }
-  header .sub { font-size: 12px; color: #8e8e93; margin-top: 2px; }
-  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 10px 16px 2px; scrollbar-width: none; }
-  .chips::-webkit-scrollbar { display: none; }
-  .chip {
-    flex-shrink: 0; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
-    background: #1c1c24; color: #c7c7cc; border: 1px solid rgba(255,255,255,.08); cursor: pointer;
-  }
-  .chip.active { background: #2f6bff; color: #fff; border-color: #2f6bff; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px 16px; }
-  .card {
-    background: #1c1c24; border-radius: 16px; overflow: hidden;
-    border: 1px solid rgba(255,255,255,.06);
-    display: flex; flex-direction: column;
-  }
-  .card .img { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #26262e; display: block; }
-  .card .body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
-  .card .name { font-size: 14px; font-weight: 600; line-height: 1.25; }
-  .card .price { font-size: 15px; font-weight: 800; color: #fff; }
-  .card .price s { color: #8e8e93; font-weight: 500; font-size: 12px; margin-left: 4px; }
-  .card .price .off { color: #34c759; font-size: 12px; font-weight: 700; margin-left: 4px; }
-  .row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
-  .qty { display: flex; align-items: center; gap: 8px; }
-  .qty button {
-    width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
-    background: #2c2c35; color: #fff; font-size: 17px; font-weight: 700; line-height: 1;
-  }
-  .qty button:active { background: #3a3a45; }
-  .qty span { min-width: 18px; text-align: center; font-weight: 700; font-size: 14px; }
-  .addbtn {
-    background: #2f6bff; color: #fff; border: none; border-radius: 10px;
-    padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer;
-  }
-  .addbtn:active { opacity: .8; }
-  .empty { text-align: center; color: #8e8e93; padding: 48px 24px; font-size: 15px; }
-  .bar {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-    background: rgba(15,15,20,.95); backdrop-filter: blur(12px);
-    border-top: 1px solid rgba(255,255,255,.08);
-    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  }
-  .bar .total { font-size: 17px; font-weight: 800; white-space: nowrap; }
-  .bar .total small { display: block; font-size: 11px; color: #8e8e93; font-weight: 500; }
-  #checkout {
-    flex: 1; background: #2f6bff; color: #fff; border: none; border-radius: 14px;
-    padding: 14px 10px; font-size: 16px; font-weight: 700; cursor: pointer;
-  }
-  #checkout:disabled { background: #2c2c35; color: #6b6b74; }
-  #status {
-    position: fixed; left: 16px; right: 16px; bottom: 92px; z-index: 20;
-    background: #1c1c24; border: 1px solid rgba(255,255,255,.12); border-radius: 14px;
-    padding: 12px 14px; font-size: 14px; line-height: 1.4; display: none;
-  }
-  #status.ok { border-color: #34c759; }
-  #status.err { border-color: #ff453a; }
-  #status button {
-    margin-top: 8px; background: #2c2c35; color: #fff; border: none; border-radius: 8px;
-    padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; margin-right: 8px;
-  }
+:root{
+  --bg:#0f1115; --card:#181c24; --card2:#1f2530; --text:#eef1f6; --muted:#8b93a3;
+  --accent:#4f8cff; --accent2:#7b5cff; --good:#2ecc71; --warn:#f39c12; --bad:#e74c3c;
+}
+*{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent}
+body{background:var(--bg); color:var(--text); font-family:-apple-system,'Segoe UI',Roboto,sans-serif; padding-bottom:96px}
+header{padding:18px 16px 6px; text-align:center}
+h1{font-size:26px; background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+#cats{display:flex; gap:8px; overflow-x:auto; padding:12px 16px; scrollbar-width:none}
+#cats::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto; padding:8px 14px; border-radius:20px; background:var(--card); color:var(--muted); border:1px solid #2a3140; font-size:14px; cursor:pointer}
+.chip.on{background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff; border-color:transparent}
+#grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:4px 16px}
+.card{background:var(--card); border:1px solid #262d3a; border-radius:14px; overflow:hidden; display:flex; flex-direction:column}
+.card img{width:100%; aspect-ratio:1/1; object-fit:cover; background:var(--card2); display:block}
+.cbody{padding:10px; display:flex; flex-direction:column; gap:6px; flex:1}
+.cname{font-size:14px; font-weight:600; line-height:1.25}
+.ccat{font-size:11px; color:var(--muted)}
+.cprice{font-size:15px; font-weight:700}
+.cprice s{color:var(--muted); font-weight:400; font-size:12px; margin-left:4px}
+.cbadge{color:var(--good); font-size:12px; font-weight:600}
+.crow{margin-top:auto; display:flex; align-items:center; gap:8px}
+.qbtn{width:30px; height:30px; border-radius:9px; border:none; background:var(--card2); color:var(--text); font-size:17px; cursor:pointer}
+.qbtn:active{transform:scale(.93)}
+.qval{min-width:22px; text-align:center; font-weight:600}
+#cartbar{position:fixed; left:12px; right:12px; bottom:12px; background:var(--card2); border:1px solid #2a3140; border-radius:16px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 8px 24px rgba(0,0,0,.45)}
+#total{font-weight:700; font-size:16px}
+#checkout{padding:12px 20px; border:none; border-radius:12px; background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff; font-size:15px; font-weight:600; cursor:pointer}
+#checkout:active{transform:scale(.97)}
+.hidden{display:none !important}
+#result{position:fixed; inset:0; background:var(--bg); z-index:50; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center; gap:12px}
+#resIcon{font-size:52px}
+#resTitle{font-size:22px; font-weight:700}
+#resText{color:var(--muted); font-size:14px; line-height:1.5; max-width:420px}
+#orderText{background:var(--card); border:1px solid #262d3a; border-radius:12px; padding:12px; font-family:inherit; font-size:13px; color:var(--text); text-align:left; max-width:440px; width:100%; max-height:180px; overflow:auto; white-space:pre-wrap}
+#result button{padding:12px 20px; border:none; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer; width:100%; max-width:340px}
+#copyBtn{background:var(--card2); color:var(--text); border:1px solid #2a3140 !important}
+#newBtn{background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff}
+#debug{position:fixed; bottom:84px; left:12px; right:12px; background:#0b0e13; border:1px solid #222a36; border-radius:12px; padding:8px 12px; font-size:11px; color:var(--muted); z-index:40}
+#debug summary{cursor:pointer}
+#dbg{margin-top:6px; line-height:1.6; word-break:break-all}
+#testBtn{margin-top:6px; padding:6px 12px; border-radius:8px; border:1px solid #2a3140; background:var(--card2); color:var(--text); font-size:12px; cursor:pointer}
+#loadmsg{color:var(--muted); text-align:center; padding:30px 16px}
 </style>
 </head>
 <body>
-<header>
-  <h1>🛍 Apex</h1>
-  <div class="sub" id="sub">Загрузка товаров…</div>
-</header>
-<div class="chips" id="chips"></div>
-<div id="app"></div>
-
-<div id="status"></div>
-
-<div class="bar">
-  <div class="total"><span id="total">Итого: 0 ₽</span><small id="cnt">Корзина пуста</small></div>
-  <button id="checkout" disabled>Оформить заказ</button>
+<header><h1>🛍 Apex</h1></header>
+<div id="cats"></div>
+<div id="loadmsg">Загрузка товаров...</div>
+<div id="grid"></div>
+<div id="cartbar">
+  <span id="total">Итого: 0 ₽</span>
+  <button id="checkout">Оформить заказ</button>
 </div>
 
+<div id="result" class="hidden">
+  <div id="resIcon"></div>
+  <div id="resTitle"></div>
+  <div id="resText"></div>
+  <pre id="orderText" class="hidden"></pre>
+  <button id="copyBtn" class="hidden">📋 Скопировать заказ</button>
+  <button id="newBtn" class="hidden">🛍 Продолжить покупки</button>
+</div>
+
+<details id="debug">
+  <summary>⚙️ Диагностика</summary>
+  <div id="dbg"></div>
+  <button id="testBtn">🧪 Тест отправки</button>
+</details>
+
 <script>
-const VER = "v11";
 const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 if (tg) { tg.ready(); tg.expand(); }
-console.log("HTML версия:", VER);
 
-let products = {};
-let discounts = { byItem: {}, byCategory: {}, global: 0 };
-let cart = {};      // key -> qty
-let currentCat = "all";
+let PRODUCTS = {};
+let DISCOUNTS = {byItem:{}, byCategory:{}, global:0};
+const cart = {};
+let activeCat = "all";
 
-const esc = s => String(s == null ? "" : s)
-  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-  .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-
-function discPercent(p) {
-  const i = (discounts.byItem && discounts.byItem[p.key]) || 0;
-  const c = (discounts.byCategory && discounts.byCategory[p.category]) || 0;
-  const g = discounts.global || 0;
-  return i || c || g;
+function discFor(p){
+  const it = DISCOUNTS.byItem[p.key]||0, ca = DISCOUNTS.byCategory[p.category]||0, gl = DISCOUNTS.global||0;
+  return it || ca || gl;
 }
-function priceOf(p) { return Math.round(p.price * (1 - discPercent(p) / 100)); }
-function rub(n) { return n.toLocaleString("ru-RU") + " ₽"; }
+function finalPrice(p){
+  const pr = discFor(p);
+  return {pr, final: Math.round((p.price||0)*(1-pr/100))};
+}
 
-async function load() {
-  const bust = "?cache=" + Date.now();
-  try {
-    products = await (await fetch("products.json" + bust)).json();
-  } catch (e) {
-    document.getElementById("sub").textContent = "Не удалось загрузить товары";
-    document.getElementById("app").innerHTML =
-      '<div class="empty">Нет связи с базой товаров 😕<br>Открой магазин заново через кнопку в чате.</div>';
+function renderCats(){
+  const cats = [...new Set(Object.values(PRODUCTS).map(p=>p.category))].sort();
+  const box = document.getElementById('cats');
+  box.innerHTML = '';
+  const mk = (label, val) => {
+    const c = document.createElement('div');
+    c.className = 'chip' + (activeCat===val?' on':'');
+    c.textContent = label;
+    c.onclick = ()=>{ activeCat=val; renderCats(); renderGrid(); };
+    box.appendChild(c);
+  };
+  mk('📦 Все', 'all');
+  cats.forEach(c=>mk(c, c));
+}
+
+function renderGrid(){
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  let shown = 0;
+  Object.values(PRODUCTS).forEach(p=>{
+    if(activeCat!=='all' && p.category!==activeCat) return;
+    shown++;
+    const {pr, final} = finalPrice(p);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML =
+      '<img src="photos/' + encodeURIComponent(p.photo||'') + '" alt="" onerror="this.style.display=\'none\'">' +
+      '<div class="cbody">' +
+        '<div class="cname">' + (p.name||'') + '</div>' +
+        '<div class="ccat">' + (p.category||'') + '</div>' +
+        (pr ? '<div class="cbadge">🔥 -' + pr + '%</div>' : '') +
+        '<div class="cprice">' + final + ' ₽' + (pr ? ' <s>' + p.price + ' ₽</s>' : '') + '</div>' +
+        '<div class="crow">' +
+          '<button class="qbtn" data-a="minus">−</button>' +
+          '<span class="qval">' + (cart[p.key]||0) + '</span>' +
+          '<button class="qbtn" data-a="plus">+</button>' +
+        '</div>' +
+      '</div>';
+    const [minus, , plus] = card.querySelectorAll('.qbtn');
+    minus.onclick = ()=>{ cart[p.key] = Math.max(0,(cart[p.key]||0)-1); if(!cart[p.key]) delete cart[p.key]; refresh(); };
+    plus.onclick  = ()=>{ cart[p.key] = (cart[p.key]||0)+1; refresh(); };
+    grid.appendChild(card);
+  });
+  if(!shown) grid.innerHTML = '<div id="loadmsg">Товаров в этой категории нет</div>';
+}
+
+function refresh(){
+  renderGrid();
+  let total = 0;
+  Object.entries(cart).forEach(([k,q])=>{
+    const p = PRODUCTS[k];
+    if(p) total += finalPrice(p).final * q;
+  });
+  document.getElementById('total').textContent = 'Итого: ' + total + ' ₽';
+}
+
+function showResult(icon, title, text, orderStr, allowCopy){
+  document.getElementById('app') && 0;
+  document.getElementById('resIcon').textContent = icon;
+  document.getElementById('resTitle').textContent = title;
+  document.getElementById('resText').innerHTML = text;
+  const ot = document.getElementById('orderText');
+  if(orderStr){ ot.textContent = orderStr; ot.classList.remove('hidden'); } else ot.classList.add('hidden');
+  const cb = document.getElementById('copyBtn');
+  if(allowCopy){ cb.classList.remove('hidden'); cb.textContent = '📋 Скопировать заказ'; } else cb.classList.add('hidden');
+  document.getElementById('newBtn').classList.remove('hidden');
+  document.getElementById('result').classList.remove('hidden');
+  document.getElementById('debug').classList.add('hidden');
+  document.getElementById('cartbar').classList.add('hidden');
+}
+
+document.getElementById('newBtn').onclick = ()=>{
+  document.getElementById('result').classList.add('hidden');
+  document.getElementById('debug').classList.remove('hidden');
+  document.getElementById('cartbar').classList.remove('hidden');
+};
+
+document.getElementById('copyBtn').onclick = async ()=>{
+  const txt = document.getElementById('orderText').textContent;
+  try { await navigator.clipboard.writeText(txt); }
+  catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove();
+  }
+  document.getElementById('copyBtn').textContent = '✅ Скопировано — вставь в чат с ботом';
+};
+
+function orderText(){
+  let lines = ['🛍 Заказ (Apex)', ''];
+  let total = 0;
+  Object.entries(cart).forEach(([k,q])=>{
+    const p = PRODUCTS[k];
+    if(!p) return;
+    const {final} = finalPrice(p);
+    lines.push('• ' + p.name + ' × ' + q + ' — ' + (final*q) + ' ₽');
+    total += final*q;
+  });
+  lines.push('', 'Итого: ' + total + ' ₽');
+  return lines.join('\n');
+}
+
+function buildOrder(){
+  return Object.entries(cart).filter(([k,q])=>q>0).map(([k,q])=>({key:k, qty:q}));
+}
+
+document.getElementById('checkout').onclick = ()=>{
+  const order = buildOrder();
+  if(!order.length){
+    showResult('🛒','Корзина пуста','Добавь товары кнопками + и − на карточках.', null, false);
+    return;
+  }
+  if(!tg || typeof tg.sendData !== 'function'){
+    showResult('⚠️','Страница открыта не из Telegram',
+      'Заказ можно отправить, только если магазин открыт из Telegram — кнопкой «🛍 Открыть магазин» в чате. Открой бота в Telegram и нажми эту кнопку.',
+      null, false);
     return;
   }
   try {
-    const d = await (await fetch("discounts.json" + bust)).json();
-    discounts = { byItem: d.byItem || {}, byCategory: d.byCategory || {}, global: d.global || 0 };
-  } catch (e) {}
-  Object.keys(products).forEach(k => products[k].key = k);
-  const count = Object.keys(products).length;
-  document.getElementById("sub").textContent =
-    "Товаров в наличии: " + count + " · версия " + VER;
-  render();
-}
-
-function render() {
-  // Категории
-  const cats = [...new Set(Object.values(products).map(p => p.category))].sort();
-  const chips = ["all", ...cats];
-  document.getElementById("chips").innerHTML = chips.map(c =>
-    `<div class="chip ${c === currentCat ? "active" : ""}" data-cat="${esc(c)}">${c === "all" ? "📦 Все" : esc(c)}</div>`
-  ).join("");
-  document.querySelectorAll(".chip").forEach(el =>
-    el.onclick = () => { currentCat = el.dataset.cat; render(); });
-
-  // Товары
-  const list = Object.values(products)
-    .filter(p => currentCat === "all" || p.category === currentCat);
-
-  const app = document.getElementById("app");
-  if (!list.length) { app.innerHTML = '<div class="empty">В этой категории пока пусто 🙂</div>'; return; }
-
-  app.innerHTML = '<div class="grid">' + list.map(p => {
-    const off = discPercent(p);
-    const fin = priceOf(p);
-    const q = cart[p.key] || 0;
-    const photo = p.photo ? ("photos/" + p.photo) : "";
-    return `<div class="card">
-      ${photo ? `<img class="img" src="${esc(photo)}" alt="">` : `<div class="img"></div>`}
-      <div class="body">
-        <div class="name">${esc(p.name)}</div>
-        <div class="price">${rub(fin)}${off ? `<s>${rub(p.price)}</s><span class="off">−${off}%</span>` : ""}</div>
-        <div class="row">
-          ${q ? `<div class="qty">
-              <button data-minus="${esc(p.key)}">−</button>
-              <span>${q}</span>
-              <button data-plus="${esc(p.key)}">+</button>
-            </div>` : `<button class="addbtn" data-plus="${esc(p.key)}">В корзину</button>`}
-        </div>
-      </div>
-    </div>`;
-  }).join("") + "</div>";
-
-  document.querySelectorAll("[data-plus]").forEach(b =>
-    b.onclick = () => change(b.dataset.plus, +1));
-  document.querySelectorAll("[data-minus]").forEach(b =>
-    b.onclick = () => change(b.dataset.minus, -1));
-}
-
-function change(key, d) {
-  cart[key] = Math.max(0, (cart[key] || 0) + d);
-  if (!cart[key]) delete cart[key];
-  if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
-  render();
-  updateBar();
-}
-
-function updateBar() {
-  let total = 0, cnt = 0;
-  Object.entries(cart).forEach(([k, q]) => {
-    const p = products[k];
-    if (p) { total += priceOf(p) * q; cnt += q; }
-  });
-  document.getElementById("total").textContent = "Итого: " + rub(total);
-  document.getElementById("cnt").textContent = cnt ? ("Товаров: " + cnt) : "Корзина пуста";
-  document.getElementById("checkout").disabled = !cnt;
-}
-
-function showStatus(html, cls) {
-  const st = document.getElementById("status");
-  st.className = cls || "";
-  st.innerHTML = html;
-  st.style.display = "block";
-}
-function hideStatus() { document.getElementById("status").style.display = "none"; }
-
-function orderPayload() {
-  return {
-    order: Object.entries(cart)
-      .filter(([k]) => products[k])
-      .map(([k, q]) => ({ key: k, qty: q }))
-  };
-}
-function orderText() {
-  const lines = Object.entries(cart).filter(([k]) => products[k])
-    .map(([k, q]) => `• ${products[k].name} × ${q} — ${rub(priceOf(products[k]) * q)}`);
-  const total = Object.entries(cart).filter(([k]) => products[k])
-    .reduce((s, [k, q]) => s + priceOf(products[k]) * q, 0);
-  return "🛍 Заказ из Mini App:\n" + lines.join("\n") + "\nИтого: " + rub(total);
-}
-
-document.getElementById("checkout").onclick = function () {
-  hideStatus();
-  if (!Object.keys(cart).length) return;
-  const payload = JSON.stringify(orderPayload());
-
-  if (tg && typeof tg.sendData === "function") {
-    try {
-      tg.sendData(payload);
-      showStatus("✅ Заказ отправлен! Можешь закрыть это окно — я получу его и свяжусь с тобой.", "ok");
-      cart = {}; render(); updateBar();
-      setTimeout(() => { if (tg) tg.close(); }, 1500);
-      return;
-    } catch (e) {
-      showStatus("⚠️ Не удалось отправить: " + esc(e.message || e), "err");
-      return;
-    }
+    tg.sendData(JSON.stringify({order}));
+    showResult('📨','Заказ отправлен в Telegram',
+      'Окно теперь не закрывается само.<br><br>Если в чате бот ответил «Заказ из приложения принят!» — всё отлично.<br><br>Если бот молчит больше 10 секунд — открой «⚙️ Диагностика» внизу и нажми «🧪 Тест отправки».',
+      null, false);
+  } catch(e){
+    showResult('⚠️','Telegram не принял отправку',
+      'Так бывает, когда магазин открыт через ☰ Меню, а не через кнопку «🛍 Открыть магазин» в чате.<br><br>Закрой магазин и открой его именно кнопкой в чате.<br><br>Ошибка: ' + (e && e.message ? e.message : e),
+      orderText(), true);
   }
-  // sendData недоступен (магазин открыт не через кнопку в чате, либо клиент без поддержки)
-  showStatus(
-    "⚠️ Этот клиент не может отправить заказ напрямую.<br><br>" +
-    "<b>Как исправить:</b> закрой это окно и открой магазин через кнопку «🛍 Открыть магазин» " +
-    "в самом чате с ботом (широкая кнопка внизу под сообщением).<br><br>" +
-    "Или отправь заказ вручную:",
-    "err");
-  const btnCopy = document.createElement("button");
-  btnCopy.textContent = "Скопировать заказ";
-  btnCopy.onclick = () => {
-    navigator.clipboard.writeText(orderText()).then(
-      () => { btnCopy.textContent = "Скопировано ✓"; },
-      () => { btnCopy.textContent = "Не вышло 😕"; }
-    );
-  };
-  document.getElementById("status").appendChild(btnCopy);
 };
 
-load();
+document.getElementById('testBtn').onclick = ()=>{
+  if(!tg || typeof tg.sendData !== 'function'){ alert('Telegram не найден'); return; }
+  try { tg.sendData('test'); alert('Тест отправлен. Смотри консоль PyCharm: там должна появиться строка "текст: test"'); }
+  catch(e){ alert('Ошибка: ' + (e && e.message ? e.message : e)); }
+};
+
+function diag(){
+  const d = document.getElementById('dbg');
+  if(!tg){ d.innerHTML = 'Telegram.WebApp: <b>не найден</b> — страница открыта в обычном браузере'; return; }
+  let u = null;
+  try { u = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.id : null; } catch(e){}
+  d.innerHTML =
+    'версия страницы: <b>v12</b><br>' +
+    'Telegram.WebApp: <b>есть</b><br>' +
+    'версия клиента: ' + (tg.version||'?') + '<br>' +
+    'платформа: ' + (tg.platform||'?') + '<br>' +
+    'sendData: <b>' + (typeof tg.sendData) + '</b><br>' +
+    'пользователь: ' + (u||'нет');
+}
+
+async function init(){
+  const bust = '?t=' + Date.now();
+  try{
+    const [pr, di] = await Promise.all([
+      fetch('products.json' + bust).then(r=>r.json()).catch(()=>({})),
+      fetch('discounts.json' + bust).then(r=>r.json()).catch(()=>null)
+    ]);
+    PRODUCTS = pr || {};
+    if(di) DISCOUNTS = {byItem: di.byItem||{}, byCategory: di.byCategory||{}, global: di.global||0};
+  }catch(e){
+    document.getElementById('loadmsg').textContent = 'Не удалось загрузить товары: ' + e;
+    return;
+  }
+  document.getElementById('loadmsg').classList.add('hidden');
+  renderCats();
+  renderGrid();
+  diag();
+}
+init();
 </script>
 </body>
 </html>
